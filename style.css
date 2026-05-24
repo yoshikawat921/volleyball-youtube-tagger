@@ -29,8 +29,7 @@ body {
 
 button,
 input,
-select,
-textarea {
+select {
   font: inherit;
 }
 
@@ -60,7 +59,6 @@ button:hover {
 button:focus-visible,
 input:focus-visible,
 select:focus-visible,
-textarea:focus-visible,
 .file-button:focus-within {
   box-shadow: var(--focus);
   outline: none;
@@ -92,18 +90,13 @@ label {
 }
 
 input,
-select,
-textarea {
+select {
   border: 1px solid var(--line);
   border-radius: 8px;
   color: var(--ink);
   min-height: 46px;
   padding: 0.7rem 0.75rem;
   width: 100%;
-}
-
-textarea {
-  resize: vertical;
 }
 
 table {
@@ -131,8 +124,7 @@ th {
 }
 
 td input,
-td select,
-td textarea {
+td select {
   min-height: 40px;
   padding: 0.5rem;
 }
