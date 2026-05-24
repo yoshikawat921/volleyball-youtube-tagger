@@ -635,8 +635,18 @@ function downloadFile(filename, content, type) {
 }
 
 function exportProject() {
-  const filename = `${state.project.projectName || "volleyball-project"}.json`.replace(/[^\w.-]+/g, "-");
+  const filename = `${safeFilename(state.project.projectName || "volleyball-project")}.json`;
   downloadFile(filename, JSON.stringify(state.project, null, 2), "application/json");
+}
+
+function safeFilename(value) {
+  const filename = String(value)
+    .trim()
+    .replace(/[\\/:*?"<>|]+/g, "-")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "");
+  return filename || "volleyball-project";
 }
 
 function exportCsv() {
