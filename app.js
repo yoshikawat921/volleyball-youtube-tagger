@@ -88,6 +88,10 @@ function cloneProject(project) {
 }
 
 function normalizeProject(project) {
+  if (project.scenes && !project.tags) {
+    return normalizeLegacySceneProject(project);
+  }
+
   return {
     projectName: normalizeProjectName(project.projectName),
     youtubeVideoId: project.youtubeVideoId || "",
@@ -116,6 +120,32 @@ function normalizeProject(project) {
           jerseyNumber,
           label: makeLabel(team, play, jerseyNumber),
           memo: tag.memo || ""
+        };
+      })
+  };
+}
+
+function normalizeLegacySceneProject(project) {
+  return {
+    projectName: normalizeProjectName(project.title || project.projectName),
+    youtubeVideoId: project.youtubeVideoId || "",
+    teams: {
+      A: { name: "チームA", jerseyNumbers: DEFAULT_JERSEYS },
+      B: { name: "チームB", jerseyNumbers: DEFAULT_JERSEYS }
+    },
+    tags: (project.scenes || [])
+      .map((scene) => {
+        const text = [scene.title, scene.notes, ...(scene.tags || [])].join(" ").toLowerCase();
+        const play = text.includes("spike") || text.includes("スパイク") ? "spike" : "serve";
+        return {
+          id: scene.id || createId(),
+          youtubeVideoId: project.youtubeVideoId || "",
+          time: clamp(Number(scene.startSeconds) || 0, 0, Number.MAX_SAFE_INTEGER),
+          team: "A",
+          play,
+          jerseyNumber: DEFAULT_JERSEYS[0],
+          label: makeLabel("A", play, DEFAULT_JERSEYS[0]),
+          memo: scene.notes || scene.title || ""
         };
       })
   };
@@ -502,6 +532,12 @@ function render() {
   renderTagTable();
 }
 
+function cueCurrentVideo() {
+  if (state.playerReady && state.project.youtubeVideoId) {
+    state.player.cueVideoById(state.project.youtubeVideoId);
+  }
+}
+
 function playClip(tag, continueSequence = false) {
   if (!state.playerReady) return;
   if (tag.youtubeVideoId && tag.youtubeVideoId !== state.project.youtubeVideoId) {
@@ -618,12 +654,14 @@ async function importProject(file) {
   if (!file) return;
   const text = await file.text();
   state.project = normalizeProject(JSON.parse(text));
+  state.filters = { play: "", team: "", jerseyNumber: "" };
+  state.selectedTeam = "A";
   state.selectedJerseyNumber = state.project.teams[state.selectedTeam].jerseyNumbers[0] || null;
-  if (state.playerReady && state.project.youtubeVideoId) {
-    state.player.cueVideoById(state.project.youtubeVideoId);
-  }
+  stopReplay("再生停止中");
+  cueCurrentVideo();
   saveProject();
   render();
+  setStatus(`${state.project.projectName} を読み込みました。タグ ${state.project.tags.length} 件`);
 }
 
 function bindEvents() {
