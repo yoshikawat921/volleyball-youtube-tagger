@@ -31,7 +31,6 @@ const els = {
   teamAJerseysInput: document.querySelector("#teamAJerseysInput"),
   teamBJerseysInput: document.querySelector("#teamBJerseysInput"),
   loadVideoButton: document.querySelector("#loadVideoButton"),
-  saveSettingsButton: document.querySelector("#saveSettingsButton"),
   exportProjectButton: document.querySelector("#exportProjectButton"),
   importProjectInput: document.querySelector("#importProjectInput"),
   videoIdLabel: document.querySelector("#videoIdLabel"),
@@ -688,7 +687,6 @@ async function importProject(file) {
 
 function bindEvents() {
   els.loadVideoButton.addEventListener("click", loadVideo);
-  els.saveSettingsButton.addEventListener("click", applySettingsFromInputs);
   els.exportProjectButton.addEventListener("click", exportProject);
   els.importProjectInput.addEventListener("change", (event) => {
     importProject(event.target.files[0]).catch(() => alert("このJSONファイルを読み込めませんでした。"));
