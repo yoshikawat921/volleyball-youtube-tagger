@@ -32,7 +32,6 @@ const els = {
   teamBJerseysInput: document.querySelector("#teamBJerseysInput"),
   loadVideoButton: document.querySelector("#loadVideoButton"),
   saveSettingsButton: document.querySelector("#saveSettingsButton"),
-  loadSampleButton: document.querySelector("#loadSampleButton"),
   exportProjectButton: document.querySelector("#exportProjectButton"),
   exportCsvButton: document.querySelector("#exportCsvButton"),
   importProjectInput: document.querySelector("#importProjectInput"),
@@ -627,24 +626,9 @@ async function importProject(file) {
   render();
 }
 
-async function loadSampleProject() {
-  const response = await fetch("sample-project.json");
-  state.project = normalizeProject(await response.json());
-  state.selectedTeam = "A";
-  state.selectedJerseyNumber = state.project.teams.A.jerseyNumbers[0] || null;
-  if (state.playerReady && state.project.youtubeVideoId) {
-    state.player.cueVideoById(state.project.youtubeVideoId);
-  }
-  saveProject();
-  render();
-}
-
 function bindEvents() {
   els.loadVideoButton.addEventListener("click", loadVideo);
   els.saveSettingsButton.addEventListener("click", applySettingsFromInputs);
-  els.loadSampleButton.addEventListener("click", () => {
-    loadSampleProject().catch(() => alert("sample-project.json を読み込めませんでした。ローカルWebサーバー経由で開いてください。"));
-  });
   els.exportProjectButton.addEventListener("click", exportProject);
   els.exportCsvButton.addEventListener("click", exportCsv);
   els.importProjectInput.addEventListener("change", (event) => {

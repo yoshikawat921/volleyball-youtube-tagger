@@ -11,7 +11,7 @@
 
 ## macOSでローカル実行する
 
-`sample-project.json` をブラウザから読み込むため、ファイルを直接開くのではなくローカルWebサーバー経由で開きます。
+YouTube IFrame Player APIを安定して読み込むため、ファイルを直接開くのではなくローカルWebサーバー経由で開きます。
 
 ```sh
 cd /Users/yoshikawat/Documents/Codex/2026-05-24/i-am-using-the-codex-desktop/volleyball-youtube-tagger
