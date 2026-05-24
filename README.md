@@ -1,4 +1,4 @@
-# バレーボール YouTube タガー
+# Volleyball Quick Tagger
 
 限定公開YouTube動画から、バレーボールの一部プレーだけをタグ付けして見返すための静的Webアプリです。
 
