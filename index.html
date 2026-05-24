@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>バレーボール YouTube タガー</title>
+    <link rel="stylesheet" href="style.css">
+  </head>
+  <body>
+    <header class="app-header">
+      <div>
+        <p class="eyebrow">サーブ・スパイク分析</p>
+        <h1>バレーボール YouTube タガー</h1>
+      </div>
+      <div class="header-actions">
+        <button id="loadSampleButton" type="button" class="secondary-button">サンプル読込</button>
+        <button id="exportProjectButton" type="button">JSON書き出し</button>
+      </div>
+    </header>
+
+    <main class="app-shell">
+      <section class="panel settings-panel" aria-labelledby="settingsTitle">
+        <div class="section-heading">
+          <h2 id="settingsTitle">プロジェクト設定</h2>
+          <p id="saveStatus" class="status-text">準備完了</p>
+        </div>
+
+        <div class="settings-grid">
+          <label>
+            プロジェクト名
+            <input id="projectNameInput" type="text" autocomplete="off">
+          </label>
+          <label>
+            YouTube URL または動画ID
+            <input id="youtubeInput" type="text" placeholder="https://youtu.be/XXXXXXXXXXX" autocomplete="off">
+          </label>
+          <label>
+            チームA名
+            <input id="teamANameInput" type="text" autocomplete="off">
+          </label>
+          <label>
+            チームB名
+            <input id="teamBNameInput" type="text" autocomplete="off">
+          </label>
+          <label>
+            チームA 背番号
+            <input id="teamAJerseysInput" type="text" placeholder="1,2,3,4,5,6">
+          </label>
+          <label>
+            チームB 背番号
+            <input id="teamBJerseysInput" type="text" placeholder="1,2,3,4,5,6">
+          </label>
+        </div>
+
+        <div class="button-row">
+          <button id="loadVideoButton" type="button">動画を読み込む</button>
+          <button id="saveSettingsButton" type="button" class="secondary-button">設定を反映</button>
+          <label class="file-button">
+            JSON読み込み
+            <input id="importProjectInput" type="file" accept="application/json,.json">
+          </label>
+          <button id="exportCsvButton" type="button" class="secondary-button">CSV書き出し</button>
+        </div>
+      </section>
+
+      <section class="main-grid">
+        <div class="left-column">
+          <section class="panel player-panel" aria-labelledby="playerTitle">
+            <div class="section-heading">
+              <h2 id="playerTitle">動画</h2>
+              <p><span id="videoIdLabel">動画未読み込み</span></p>
+            </div>
+            <div id="player" class="player-box" aria-label="YouTube動画プレイヤー"></div>
+            <div class="playback-controls" aria-label="再生操作">
+              <button id="seekBack5Button" type="button">-5s</button>
+              <button id="seekBack1Button" type="button">-1s</button>
+              <button id="playPauseButton" type="button">再生 / 一時停止</button>
+              <button id="seekForward1Button" type="button">+1s</button>
+              <button id="seekForward5Button" type="button">+5s</button>
+            </div>
+          </section>
+
+          <section class="panel tagging-panel" aria-labelledby="taggingTitle">
+            <div class="section-heading">
+              <h2 id="taggingTitle">クイックタグ</h2>
+              <p>現在時刻: <strong id="currentTimeLabel">0:00.0</strong></p>
+            </div>
+
+            <div class="segmented-control" aria-label="チーム選択">
+              <button id="teamAButton" type="button" class="active" data-team="A">チームA</button>
+              <button id="teamBButton" type="button" data-team="B">チームB</button>
+            </div>
+
+            <div>
+              <div class="mini-heading">背番号</div>
+              <div id="jerseyButtons" class="jersey-grid" aria-live="polite"></div>
+            </div>
+
+            <label>
+              メモ
+              <textarea id="memoInput" rows="2" placeholder="次に追加するタグの任意メモ"></textarea>
+            </label>
+
+            <div class="tag-actions">
+              <button id="tagServeButton" type="button" class="serve-button">サーブをタグ</button>
+              <button id="tagSpikeButton" type="button" class="spike-button">スパイクをタグ</button>
+            </div>
+          </section>
+        </div>
+
+        <div class="right-column">
+          <section class="panel replay-panel" aria-labelledby="replayTitle">
+            <div class="section-heading">
+              <h2 id="replayTitle">絞り込み再生</h2>
+              <p>該当タグ <span id="filteredCountLabel">0</span> 件</p>
+            </div>
+
+            <div class="filter-grid">
+              <label>
+                プレー種別
+                <select id="playFilter">
+                  <option value="">すべて</option>
+                  <option value="serve">サーブ</option>
+                  <option value="spike">スパイク</option>
+                </select>
+              </label>
+              <label>
+                チーム
+                <select id="teamFilter">
+                  <option value="">すべて</option>
+                  <option value="A">チームA</option>
+                  <option value="B">チームB</option>
+                </select>
+              </label>
+              <label>
+                背番号
+                <select id="jerseyFilter">
+                  <option value="">すべて</option>
+                </select>
+              </label>
+            </div>
+
+            <div class="replay-window">
+              <div>
+                <div class="mini-heading">前</div>
+                <div id="preRollButtons" class="number-picker"></div>
+              </div>
+              <div>
+                <div class="mini-heading">後</div>
+                <div id="postRollButtons" class="number-picker"></div>
+              </div>
+            </div>
+
+            <div class="button-row">
+              <button id="playFilteredButton" type="button">絞り込みタグを連続再生</button>
+              <button id="stopReplayButton" type="button" class="danger-button">再生停止</button>
+            </div>
+            <p id="replayStatus" class="status-text">再生停止中</p>
+          </section>
+        </div>
+      </section>
+
+      <section class="panel table-panel" aria-labelledby="tableTitle">
+        <div class="section-heading">
+          <h2 id="tableTitle">タグ一覧</h2>
+          <p>合計 <span id="totalTagsLabel">0</span> 件</p>
+        </div>
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>時刻</th>
+                <th>チーム</th>
+                <th>プレー</th>
+                <th>背番号</th>
+                <th>ラベル</th>
+                <th>メモ</th>
+                <th>時刻調整</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody id="tagTableBody"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <script src="https://www.youtube.com/iframe_api"></script>
+    <script src="app.js"></script>
+  </body>
+</html>

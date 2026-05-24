@@ -1,0 +1,36 @@
+{
+  "projectName": "サンプル バレーボールタグ付けプロジェクト",
+  "youtubeVideoId": "XXXXXXXXXXX",
+  "teams": {
+    "A": {
+      "name": "チームA",
+      "jerseyNumbers": [1, 3, 5, 8, 10, 12]
+    },
+    "B": {
+      "name": "チームB",
+      "jerseyNumbers": [2, 4, 6, 9, 11, 12]
+    }
+  },
+  "tags": [
+    {
+      "id": "tag-001",
+      "youtubeVideoId": "XXXXXXXXXXX",
+      "time": 123.45,
+      "team": "A",
+      "play": "serve",
+      "jerseyNumber": 8,
+      "label": "A_serve_8",
+      "memo": "プレースホルダー動画IDを使ったサンプルのサーブタグです。"
+    },
+    {
+      "id": "tag-002",
+      "youtubeVideoId": "XXXXXXXXXXX",
+      "time": 188.2,
+      "team": "B",
+      "play": "spike",
+      "jerseyNumber": 12,
+      "label": "B_spike_12",
+      "memo": "個人情報を含まないサンプルのスパイクタグです。"
+    }
+  ]
+}
