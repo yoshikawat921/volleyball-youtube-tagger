@@ -101,16 +101,18 @@ select {
 
 table {
   border-collapse: collapse;
-  min-width: 640px;
+  min-width: 620px;
+  table-layout: fixed;
   width: 100%;
 }
 
 th,
 td {
   border-bottom: 1px solid var(--line);
-  padding: 0.65rem;
+  padding: 0.55rem 0.45rem;
   text-align: left;
   vertical-align: top;
+  white-space: nowrap;
 }
 
 th {
@@ -120,19 +122,50 @@ th {
   position: sticky;
   top: 0;
   text-transform: uppercase;
+  white-space: nowrap;
   z-index: 1;
 }
 
 td input,
 td select {
   min-height: 40px;
-  padding: 0.5rem;
+  padding: 0.45rem 0.5rem;
+}
+
+th:nth-child(1),
+td:nth-child(1) {
+  width: 5.8rem;
+}
+
+th:nth-child(2),
+td:nth-child(2) {
+  width: 4rem;
+}
+
+th:nth-child(3),
+td:nth-child(3) {
+  width: 5.5rem;
+}
+
+th:nth-child(4),
+td:nth-child(4) {
+  width: 5.7rem;
+}
+
+th:nth-child(5),
+td:nth-child(5) {
+  width: 7.8rem;
+}
+
+th:nth-child(6),
+td:nth-child(6) {
+  width: 6.9rem;
 }
 
 .app-header,
 .app-shell {
   margin: 0 auto;
-  max-width: 1320px;
+  max-width: 1360px;
 }
 
 .app-header {
@@ -206,7 +239,7 @@ td select {
 .main-grid {
   display: grid;
   gap: 1rem;
-  grid-template-columns: minmax(0, 1.12fr) minmax(400px, 0.88fr);
+  grid-template-columns: minmax(0, 1.05fr) minmax(440px, 0.95fr);
 }
 
 .left-column,
@@ -324,6 +357,27 @@ td select {
   background: #7f2f16;
 }
 
+.replay-panel {
+  padding-bottom: 0.8rem;
+}
+
+.replay-panel .section-heading {
+  margin-bottom: 0.75rem;
+}
+
+.replay-panel .button-row {
+  gap: 0.5rem;
+}
+
+.replay-panel .button-row button {
+  min-height: 44px;
+  padding: 0.65rem 0.9rem;
+}
+
+.replay-panel .status-text {
+  font-size: 0.9rem;
+}
+
 .filter-grid {
   display: grid;
   gap: 0.6rem;
@@ -340,7 +394,8 @@ td select {
 .number-picker {
   display: grid;
   gap: 0.35rem;
-  grid-template-columns: repeat(6, 1fr);
+  grid-template-columns: repeat(6, 3.8rem);
+  justify-content: start;
 }
 
 .number-picker button {
@@ -360,14 +415,15 @@ td select {
 
 .action-buttons {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.35rem;
+  flex-wrap: nowrap;
+  gap: 0.3rem;
 }
 
 .action-buttons button {
   font-size: 0.78rem;
-  min-height: 38px;
-  padding: 0.45rem 0.55rem;
+  min-height: 36px;
+  min-width: 3rem;
+  padding: 0.4rem 0.45rem;
 }
 
 .label-pill {
@@ -409,6 +465,10 @@ td select {
 
   .settings-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .number-picker {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
   }
 }
 

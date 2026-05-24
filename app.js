@@ -437,7 +437,7 @@ function renderNumberPicker(container, selected, onSelect) {
   for (let value = 0; value <= 5; value += 1) {
     const button = document.createElement("button");
     button.type = "button";
-    button.textContent = String(value);
+    button.textContent = `${value}s`;
     button.classList.toggle("active", value === selected);
     button.addEventListener("click", () => onSelect(value));
     container.append(button);
