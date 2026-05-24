@@ -19,8 +19,7 @@
       "team": "A",
       "play": "serve",
       "jerseyNumber": 8,
-      "label": "A_serve_8",
-      "memo": "プレースホルダー動画IDを使ったサンプルのサーブタグです。"
+      "label": "A_serve_8"
     },
     {
       "id": "tag-002",
@@ -29,8 +28,7 @@
       "team": "B",
       "play": "spike",
       "jerseyNumber": 12,
-      "label": "B_spike_12",
-      "memo": "個人情報を含まないサンプルのスパイクタグです。"
+      "label": "B_spike_12"
     }
   ]
 }

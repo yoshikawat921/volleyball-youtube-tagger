@@ -89,11 +89,6 @@
               <div id="jerseyButtons" class="jersey-grid" aria-live="polite"></div>
             </div>
 
-            <label>
-              メモ
-              <textarea id="memoInput" rows="2" placeholder="次に追加するタグの任意メモ"></textarea>
-            </label>
-
             <div class="tag-actions">
               <button id="tagServeButton" type="button" class="serve-button">サーブをタグ</button>
               <button id="tagSpikeButton" type="button" class="spike-button">スパイクをタグ</button>
@@ -150,30 +145,28 @@
             </div>
             <p id="replayStatus" class="status-text">再生停止中</p>
           </section>
-        </div>
-      </section>
 
-      <section class="panel table-panel" aria-labelledby="tableTitle">
-        <div class="section-heading">
-          <h2 id="tableTitle">タグ一覧</h2>
-          <p>合計 <span id="totalTagsLabel">0</span> 件</p>
-        </div>
-        <div class="table-scroll">
-          <table>
-            <thead>
-              <tr>
-                <th>時刻</th>
-                <th>チーム</th>
-                <th>プレー</th>
-                <th>背番号</th>
-                <th>ラベル</th>
-                <th>メモ</th>
-                <th>時刻調整</th>
-                <th>操作</th>
-              </tr>
-            </thead>
-            <tbody id="tagTableBody"></tbody>
-          </table>
+          <section class="panel table-panel" aria-labelledby="tableTitle">
+            <div class="section-heading">
+              <h2 id="tableTitle">タグ一覧</h2>
+              <p>合計 <span id="totalTagsLabel">0</span> 件</p>
+            </div>
+            <div id="tagTableScroll" class="table-scroll">
+              <table>
+                <thead>
+                  <tr>
+                    <th>時刻</th>
+                    <th>チーム</th>
+                    <th>プレー</th>
+                    <th>背番号</th>
+                    <th>ラベル</th>
+                    <th>操作</th>
+                  </tr>
+                </thead>
+                <tbody id="tagTableBody"></tbody>
+              </table>
+            </div>
+          </section>
         </div>
       </section>
     </main>

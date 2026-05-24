@@ -20,6 +20,7 @@ const state = {
   postRoll: 3,
   player: null,
   playerReady: false,
+  shouldScrollTagTableToBottom: false,
   replay: { active: false, tags: [], index: 0, clipEnd: 0, timer: null }
 };
 
@@ -39,7 +40,6 @@ const els = {
   teamAButton: document.querySelector("#teamAButton"),
   teamBButton: document.querySelector("#teamBButton"),
   jerseyButtons: document.querySelector("#jerseyButtons"),
-  memoInput: document.querySelector("#memoInput"),
   tagServeButton: document.querySelector("#tagServeButton"),
   tagSpikeButton: document.querySelector("#tagSpikeButton"),
   playPauseButton: document.querySelector("#playPauseButton"),
@@ -57,6 +57,7 @@ const els = {
   stopReplayButton: document.querySelector("#stopReplayButton"),
   replayStatus: document.querySelector("#replayStatus"),
   totalTagsLabel: document.querySelector("#totalTagsLabel"),
+  tagTableScroll: document.querySelector("#tagTableScroll"),
   tagTableBody: document.querySelector("#tagTableBody")
 };
 
@@ -118,8 +119,7 @@ function normalizeProject(project) {
           team,
           play,
           jerseyNumber,
-          label: makeLabel(team, play, jerseyNumber),
-          memo: tag.memo || ""
+          label: makeLabel(team, play, jerseyNumber)
         };
       })
   };
@@ -144,8 +144,7 @@ function normalizeLegacySceneProject(project) {
           team: "A",
           play,
           jerseyNumber: DEFAULT_JERSEYS[0],
-          label: makeLabel("A", play, DEFAULT_JERSEYS[0]),
-          memo: scene.notes || scene.title || ""
+          label: makeLabel("A", play, DEFAULT_JERSEYS[0])
         };
       })
   };
@@ -326,12 +325,11 @@ function addTag(play) {
     team: state.selectedTeam,
     play,
     jerseyNumber: state.selectedJerseyNumber,
-    label: makeLabel(state.selectedTeam, play, state.selectedJerseyNumber),
-    memo: els.memoInput.value.trim()
+    label: makeLabel(state.selectedTeam, play, state.selectedJerseyNumber)
   };
 
   state.project.tags.push(tag);
-  els.memoInput.value = "";
+  state.shouldScrollTagTableToBottom = true;
   saveProject();
   render();
 }
@@ -460,7 +458,7 @@ function renderTagTable() {
 
   if (!tags.length) {
     const row = document.createElement("tr");
-    row.innerHTML = '<td class="empty-row" colspan="8">タグはまだありません。チームと背番号を選び、サーブまたはスパイクをタグしてください。</td>';
+    row.innerHTML = '<td class="empty-row" colspan="6">タグはまだありません。チームと背番号を選び、サーブまたはスパイクをタグしてください。</td>';
     els.tagTableBody.append(row);
     return;
   }
@@ -483,18 +481,8 @@ function renderTagTable() {
       </td>
       <td><input class="jersey-input" type="number" min="0" step="1" value="${tag.jerseyNumber}" aria-label="背番号"></td>
       <td><span class="label-pill">${tag.label}</span></td>
-      <td><textarea class="memo-input" rows="2" aria-label="メモ">${escapeHtml(tag.memo)}</textarea></td>
-      <td>
-        <div class="adjust-buttons">
-          <button type="button" data-adjust="-1">-1.0</button>
-          <button type="button" data-adjust="-0.1">-0.1</button>
-          <button type="button" data-adjust="0.1">+0.1</button>
-          <button type="button" data-adjust="1">+1.0</button>
-        </div>
-      </td>
       <td>
         <div class="action-buttons">
-          <button type="button" data-action="edit" class="secondary-button">編集</button>
           <button type="button" data-action="seek" class="secondary-button">再生</button>
           <button type="button" data-action="delete" class="danger-button">削除</button>
         </div>
@@ -513,19 +501,6 @@ function renderTagTable() {
     row.querySelector(".jersey-input").addEventListener("change", (event) => {
       updateTag(tag.id, { jerseyNumber: Number(event.target.value) });
     });
-    row.querySelector(".memo-input").addEventListener("change", (event) => {
-      updateTag(tag.id, { memo: event.target.value });
-    });
-    row.querySelectorAll("[data-adjust]").forEach((button) => {
-      button.addEventListener("click", () => {
-        const delta = Number(button.dataset.adjust);
-        updateTag(tag.id, { time: Number(Math.max(0, tag.time + delta).toFixed(2)) });
-      });
-    });
-    row.querySelector('[data-action="edit"]').addEventListener("click", () => {
-      row.querySelector(".time-input").focus();
-      setStatus(`${tag.label} を編集中`);
-    });
     row.querySelector('[data-action="seek"]').addEventListener("click", () => {
       playClip(tag);
     });
@@ -535,14 +510,13 @@ function renderTagTable() {
 
     els.tagTableBody.append(row);
   });
-}
 
-function escapeHtml(value) {
-  return String(value)
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;");
+  if (state.shouldScrollTagTableToBottom) {
+    requestAnimationFrame(() => {
+      els.tagTableScroll.scrollTop = els.tagTableScroll.scrollHeight;
+    });
+    state.shouldScrollTagTableToBottom = false;
+  }
 }
 
 function render() {
