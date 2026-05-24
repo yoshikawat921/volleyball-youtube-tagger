@@ -26,12 +26,12 @@
 
         <div class="settings-grid">
           <label>
-            プロジェクト名
-            <input id="projectNameInput" type="text" autocomplete="off">
-          </label>
-          <label>
             YouTube URL または動画ID
             <input id="youtubeInput" type="text" placeholder="https://youtu.be/XXXXXXXXXXX" autocomplete="off">
+          </label>
+          <label>
+            動画タイトル
+            <input id="projectNameInput" type="text" placeholder="動画読み込み後に自動取得" autocomplete="off" readonly>
           </label>
           <label>
             チームA名
@@ -58,7 +58,6 @@
             JSON読み込み
             <input id="importProjectInput" type="file" accept="application/json,.json">
           </label>
-          <button id="exportCsvButton" type="button" class="secondary-button">CSV書き出し</button>
         </div>
       </section>
 

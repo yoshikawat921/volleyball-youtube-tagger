@@ -33,7 +33,6 @@ const els = {
   loadVideoButton: document.querySelector("#loadVideoButton"),
   saveSettingsButton: document.querySelector("#saveSettingsButton"),
   exportProjectButton: document.querySelector("#exportProjectButton"),
-  exportCsvButton: document.querySelector("#exportCsvButton"),
   importProjectInput: document.querySelector("#importProjectInput"),
   videoIdLabel: document.querySelector("#videoIdLabel"),
   currentTimeLabel: document.querySelector("#currentTimeLabel"),
@@ -77,8 +76,10 @@ window.onYouTubeIframeAPIReady = () => {
         state.playerReady = true;
         if (state.project.youtubeVideoId) {
           state.player.cueVideoById(state.project.youtubeVideoId);
+          scheduleVideoTitleSync();
         }
-      }
+      },
+      onStateChange: () => updateVideoTitleFromPlayer()
     }
   });
 };
@@ -251,7 +252,7 @@ function togglePlayPause() {
 
 function applySettingsFromInputs() {
   const videoId = extractYouTubeId(els.youtubeInput.value) || state.project.youtubeVideoId;
-  state.project.projectName = els.projectNameInput.value.trim() || "無題のバレーボールプロジェクト";
+  const videoChanged = videoId && videoId !== state.project.youtubeVideoId;
   state.project.youtubeVideoId = videoId;
   state.project.teams.A.name = els.teamANameInput.value.trim() || "チームA";
   state.project.teams.B.name = els.teamBNameInput.value.trim() || "チームB";
@@ -266,7 +267,11 @@ function applySettingsFromInputs() {
     state.selectedJerseyNumber = state.project.teams[state.selectedTeam].jerseyNumbers[0] || null;
   }
 
-  loadVideo();
+  if (videoChanged) {
+    loadVideo();
+    return;
+  }
+
   saveProject();
   render();
 }
@@ -278,14 +283,31 @@ function loadVideo() {
     return;
   }
   state.project.youtubeVideoId = videoId;
+  state.project.projectName = "動画タイトル取得中";
   state.project.tags.forEach((tag) => {
     tag.youtubeVideoId = videoId;
   });
   if (state.playerReady) {
     state.player.cueVideoById(videoId);
+    scheduleVideoTitleSync();
   }
   saveProject();
   render();
+}
+
+function scheduleVideoTitleSync() {
+  setTimeout(updateVideoTitleFromPlayer, 300);
+  setTimeout(updateVideoTitleFromPlayer, 1200);
+  setTimeout(updateVideoTitleFromPlayer, 2500);
+}
+
+function updateVideoTitleFromPlayer() {
+  if (!state.playerReady || !state.player?.getVideoData) return;
+  const title = state.player.getVideoData()?.title?.trim();
+  if (!title || title === state.project.projectName) return;
+  state.project.projectName = title;
+  saveProject();
+  renderSettings();
 }
 
 function addTag(play) {
@@ -649,17 +671,6 @@ function safeFilename(value) {
   return filename || "volleyball-project";
 }
 
-function exportCsv() {
-  const headers = ["id", "youtubeVideoId", "time", "team", "play", "jerseyNumber", "label", "memo"];
-  const rows = sortedTags().map((tag) => headers.map((key) => csvCell(tag[key])).join(","));
-  downloadFile("volleyball-tags.csv", [headers.join(","), ...rows].join("\n"), "text/csv");
-}
-
-function csvCell(value) {
-  const text = String(value ?? "");
-  return `"${text.replaceAll('"', '""')}"`;
-}
-
 async function importProject(file) {
   if (!file) return;
   const text = await file.text();
@@ -669,6 +680,7 @@ async function importProject(file) {
   state.selectedJerseyNumber = state.project.teams[state.selectedTeam].jerseyNumbers[0] || null;
   stopReplay("再生停止中");
   cueCurrentVideo();
+  scheduleVideoTitleSync();
   saveProject();
   render();
   setStatus(`${state.project.projectName} を読み込みました。タグ ${state.project.tags.length} 件`);
@@ -678,13 +690,12 @@ function bindEvents() {
   els.loadVideoButton.addEventListener("click", loadVideo);
   els.saveSettingsButton.addEventListener("click", applySettingsFromInputs);
   els.exportProjectButton.addEventListener("click", exportProject);
-  els.exportCsvButton.addEventListener("click", exportCsv);
   els.importProjectInput.addEventListener("change", (event) => {
     importProject(event.target.files[0]).catch(() => alert("このJSONファイルを読み込めませんでした。"));
     event.target.value = "";
   });
 
-  [els.projectNameInput, els.teamANameInput, els.teamBNameInput, els.teamAJerseysInput, els.teamBJerseysInput].forEach((input) => {
+  [els.teamANameInput, els.teamBNameInput, els.teamAJerseysInput, els.teamBJerseysInput].forEach((input) => {
     input.addEventListener("change", applySettingsFromInputs);
   });
 
