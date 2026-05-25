@@ -209,7 +209,9 @@ function normalizePlay(value) {
 function parseJerseyNumbers(value) {
   return String(value)
     .split(/[\s,]+/)
-    .map((entry) => Number(entry.trim()))
+    .map((entry) => entry.trim())
+    .filter((entry) => entry !== "")
+    .map((entry) => Number(entry))
     .filter((number) => Number.isInteger(number) && number >= 0);
 }
 
@@ -571,8 +573,8 @@ function renderTagTable() {
       <td><input class="jersey-input" type="number" min="0" step="1" value="${tag.jerseyNumber ?? ""}" placeholder="未選択" aria-label="背番号"></td>
       <td>
         <div class="action-buttons">
-          <button type="button" data-action="seek" class="secondary-button">再生</button>
-          <button type="button" data-action="delete" class="danger-button">削除</button>
+          <button type="button" data-action="seek" class="table-play-button">再生</button>
+          <button type="button" data-action="delete" class="table-delete-button">削除</button>
         </div>
       </td>
     `;
@@ -797,8 +799,20 @@ function downloadFile(filename, content, type) {
 }
 
 function exportProject() {
-  const filename = `${safeFilename(state.project.projectName || "volleyball-project")}.json`;
+  const filename = `${safeFilename(state.project.projectName || "volleyball-project")}_${formatExportTimestamp(new Date())}.json`;
   downloadFile(filename, JSON.stringify(state.project, null, 2), "application/json");
+}
+
+function formatExportTimestamp(date) {
+  const parts = [
+    date.getFullYear(),
+    String(date.getMonth() + 1).padStart(2, "0"),
+    String(date.getDate()).padStart(2, "0"),
+    String(date.getHours()).padStart(2, "0"),
+    String(date.getMinutes()).padStart(2, "0"),
+    String(date.getSeconds()).padStart(2, "0")
+  ];
+  return `${parts[0]}${parts[1]}${parts[2]}-${parts[3]}${parts[4]}${parts[5]}`;
 }
 
 function safeFilename(value) {

@@ -360,14 +360,32 @@ td:nth-child(5) {
 }
 
 .secondary-button,
-.file-button {
+.table-delete-button {
   background: #e8eee9;
   color: var(--ink);
 }
 
 .secondary-button:hover,
-.file-button:hover {
+.table-delete-button:hover {
   background: #dbe7df;
+}
+
+.file-button {
+  background: var(--serve);
+  color: #fff;
+}
+
+.file-button:hover {
+  background: #104d87;
+}
+
+.export-button {
+  background: var(--spike);
+  color: #fff;
+}
+
+.export-button:hover {
+  background: #7f2f16;
 }
 
 .danger-button {
@@ -530,7 +548,7 @@ td:nth-child(5) {
   box-shadow: none;
   display: flex;
   flex-direction: column;
-  height: clamp(360px, 44vh, 460px);
+  height: clamp(390px, 47.5vh, 490px);
   min-height: 0;
   overflow: hidden;
 }
@@ -556,6 +574,15 @@ td:nth-child(5) {
   min-height: 36px;
   min-width: 3rem;
   padding: 0.4rem 0.45rem;
+}
+
+.table-play-button {
+  background: var(--accent);
+  color: #fff;
+}
+
+.table-play-button:hover {
+  background: var(--accent-dark);
 }
 
 .label-pill {
