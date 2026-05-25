@@ -70,7 +70,8 @@ const els = {
   resetCancelButton: document.querySelector("#resetCancelButton")
 };
 
-window.onYouTubeIframeAPIReady = () => {
+function initializeYouTubePlayer() {
+  if (state.player || !window.YT?.Player) return;
   state.player = new YT.Player("player", {
     height: "390",
     width: "640",
@@ -91,7 +92,10 @@ window.onYouTubeIframeAPIReady = () => {
       onStateChange: () => updateVideoTitleFromPlayer()
     }
   });
-};
+}
+
+window.onYouTubeIframeAPIReady = initializeYouTubePlayer;
+initializeYouTubePlayer();
 
 function cloneProject(project) {
   return JSON.parse(JSON.stringify(project));
