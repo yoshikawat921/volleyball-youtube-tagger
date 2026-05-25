@@ -563,6 +563,16 @@ td:nth-child(5) {
   border-color: #e3c766;
 }
 
+.recently-added-row td {
+  background: #fdeaea;
+}
+
+.recently-added-row input,
+.recently-added-row select {
+  background: #fff7f7;
+  border-color: #efb4b4;
+}
+
 .action-buttons {
   display: flex;
   flex-wrap: nowrap;

@@ -22,7 +22,7 @@ const state = {
   postRoll: 3,
   player: null,
   playerReady: false,
-  pendingScrollTagId: "",
+  recentlyAddedTagId: "",
   activeReplayTagId: "",
   replay: { active: false, tags: [], index: 0, clipEnd: 0, timer: null }
 };
@@ -376,7 +376,7 @@ function addTag(play) {
   };
 
   state.project.tags.push(tag);
-  state.pendingScrollTagId = tag.id;
+  state.recentlyAddedTagId = tag.id;
   saveProject();
   render();
 }
@@ -559,6 +559,7 @@ function renderTagTable() {
     const row = document.createElement("tr");
     row.dataset.tagId = tag.id;
     row.classList.toggle("active-replay-row", tag.id === state.activeReplayTagId);
+    row.classList.toggle("recently-added-row", tag.id === state.recentlyAddedTagId);
     row.innerHTML = `
       <td><input class="time-input" value="${formatTime(tag.time)}" aria-label="タグ時刻"></td>
       <td>
@@ -605,14 +606,6 @@ function renderTagTable() {
     els.tagTableBody.append(row);
   });
 
-  if (state.pendingScrollTagId) {
-    const tagId = state.pendingScrollTagId;
-    requestAnimationFrame(() => {
-      const row = els.tagTableBody.querySelector(`[data-tag-id="${CSS.escape(tagId)}"]`);
-      row?.scrollIntoView({ block: "center" });
-    });
-    state.pendingScrollTagId = "";
-  }
 }
 
 function focusTagRow(tagId, scroll = true) {
@@ -754,7 +747,7 @@ async function resetProject() {
   state.selectedTeam = "";
   state.selectedJerseyNumber = null;
   state.filters = { play: "", team: "", jerseyNumber: "" };
-  state.pendingScrollTagId = "";
+  state.recentlyAddedTagId = "";
   els.playFilter.value = "";
   els.teamFilter.value = "";
   els.jerseyFilter.value = "";
