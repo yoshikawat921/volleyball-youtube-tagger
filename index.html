@@ -4,12 +4,12 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Volleyball Quick Tagger</title>
-    <link rel="stylesheet" href="style.css?v=20260524-3">
+    <link rel="stylesheet" href="style.css?v=20260525-15">
   </head>
   <body>
     <header class="app-header">
       <div>
-        <p class="eyebrow">Serve and spike analysis</p>
+        <p class="eyebrow">Serve and attack analysis</p>
         <h1>Volleyball Quick Tagger</h1>
       </div>
     </header>
@@ -46,13 +46,14 @@
           </label>
         </div>
 
-        <div class="button-row">
-          <button id="loadVideoButton" type="button">動画を読み込む</button>
+        <div class="button-row settings-actions">
+          <button id="loadVideoButton" type="button">動画読み込み</button>
           <label class="file-button">
-            再開（JSON読み込み）
+            再開：JSON読み込み
             <input id="importProjectInput" type="file" accept="application/json,.json">
           </label>
-          <button id="exportProjectButton" type="button" class="secondary-button">保存（JSON書き出し）</button>
+          <button id="exportProjectButton" type="button" class="secondary-button">保存：JSON書き出し</button>
+          <button id="resetProjectButton" type="button" class="reset-button">初期化</button>
         </div>
       </section>
 
@@ -65,11 +66,16 @@
             </div>
             <div id="player" class="player-box" aria-label="YouTube動画プレイヤー"></div>
             <div class="playback-controls" aria-label="再生操作">
-              <button id="seekBack5Button" type="button">-5s</button>
-              <button id="seekBack1Button" type="button">-1s</button>
-              <button id="playPauseButton" type="button" aria-label="再生 / 一時停止">▶ / ⏸</button>
-              <button id="seekForward1Button" type="button">+1s</button>
-              <button id="seekForward5Button" type="button">+5s</button>
+              <button id="seekBack30Button" type="button" class="skip-button">-30s</button>
+              <button id="seekBack5Button" type="button" class="skip-button">-5s</button>
+              <button id="seekBack1Button" type="button" class="skip-button">-1s</button>
+              <button id="playPauseButton" type="button" class="play-pause-button" aria-label="再生 / 一時停止">
+                <span class="play-icon" aria-hidden="true"></span>
+                <span class="pause-icon" aria-hidden="true"></span>
+              </button>
+              <button id="seekForward1Button" type="button" class="skip-button">+1s</button>
+              <button id="seekForward5Button" type="button" class="skip-button">+5s</button>
+              <button id="seekForward30Button" type="button" class="skip-button">+30s</button>
             </div>
           </section>
 
@@ -80,6 +86,7 @@
             </div>
 
             <div class="segmented-control" aria-label="チーム選択">
+              <button id="teamNoneButton" type="button" class="unset-button" data-team="">未選択</button>
               <button id="teamAButton" type="button" class="active" data-team="A">チームA</button>
               <button id="teamBButton" type="button" data-team="B">チームB</button>
             </div>
@@ -91,12 +98,33 @@
 
             <div class="tag-actions">
               <button id="tagServeButton" type="button" class="serve-button">サーブをタグ</button>
-              <button id="tagSpikeButton" type="button" class="spike-button">スパイクをタグ</button>
+              <button id="tagSpikeButton" type="button" class="spike-button">アタックをタグ</button>
             </div>
           </section>
         </div>
 
         <div class="right-column">
+          <section class="panel table-panel" aria-labelledby="tableTitle">
+            <div class="section-heading">
+              <h2 id="tableTitle">タグ一覧</h2>
+              <p>合計 <span id="totalTagsLabel">0</span> 件</p>
+            </div>
+            <div id="tagTableScroll" class="table-scroll">
+              <table>
+                <thead>
+                  <tr>
+                    <th><button type="button" class="sort-button" data-sort-key="time">時刻</button></th>
+                    <th><button type="button" class="sort-button" data-sort-key="team">チーム</button></th>
+                    <th><button type="button" class="sort-button" data-sort-key="play">プレー</button></th>
+                    <th><button type="button" class="sort-button" data-sort-key="jerseyNumber">背番号</button></th>
+                    <th><span class="sr-only">タグ操作</span></th>
+                  </tr>
+                </thead>
+                <tbody id="tagTableBody"></tbody>
+              </table>
+            </div>
+          </section>
+
           <section class="panel replay-panel" aria-labelledby="replayTitle">
             <div class="section-heading">
               <h2 id="replayTitle">絞り込み再生</h2>
@@ -109,7 +137,7 @@
                 <select id="playFilter">
                   <option value="">すべて</option>
                   <option value="serve">サーブ</option>
-                  <option value="spike">スパイク</option>
+                  <option value="attack">アタック</option>
                 </select>
               </label>
               <label>
@@ -141,37 +169,26 @@
 
             <div class="button-row">
               <button id="playFilteredButton" type="button">絞り込みタグを連続再生</button>
-              <button id="stopReplayButton" type="button" class="danger-button">再生停止</button>
+              <button id="stopReplayButton" type="button" class="secondary-button">再生停止</button>
             </div>
             <p id="replayStatus" class="status-text">再生停止中</p>
-          </section>
-
-          <section class="panel table-panel" aria-labelledby="tableTitle">
-            <div class="section-heading">
-              <h2 id="tableTitle">タグ一覧</h2>
-              <p>合計 <span id="totalTagsLabel">0</span> 件</p>
-            </div>
-            <div id="tagTableScroll" class="table-scroll">
-              <table>
-                <thead>
-                  <tr>
-                    <th>時刻</th>
-                    <th>チーム</th>
-                    <th>プレー</th>
-                    <th>背番号</th>
-                    <th>ラベル</th>
-                    <th><span class="sr-only">タグ操作</span></th>
-                  </tr>
-                </thead>
-                <tbody id="tagTableBody"></tbody>
-              </table>
-            </div>
           </section>
         </div>
       </section>
     </main>
 
+    <dialog id="resetConfirmDialog" class="confirm-dialog" aria-labelledby="resetConfirmTitle">
+      <form method="dialog">
+        <h2 id="resetConfirmTitle">初期化しますか？</h2>
+        <p>現在の入力内容とローカル保存データを初期化します。JSON書き出ししていないタグは失われます。</p>
+        <div class="dialog-actions">
+          <button id="resetCancelButton" type="submit" value="cancel" class="secondary-button" autofocus>キャンセル</button>
+          <button type="submit" value="reset" class="reset-button">初期化する</button>
+        </div>
+      </form>
+    </dialog>
+
     <script src="https://www.youtube.com/iframe_api"></script>
-    <script src="app.js?v=20260524-3"></script>
+    <script src="app.js?v=20260525-6"></script>
   </body>
 </html>
