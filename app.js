@@ -1218,6 +1218,14 @@ function handleKeyboardShortcuts(event) {
     event.preventDefault();
     seekBy(event.shiftKey ? 5 : 1);
   }
+  if (event.key.toLowerCase() === "s") {
+    event.preventDefault();
+    addTag("serve");
+  }
+  if (event.key.toLowerCase() === "a") {
+    event.preventDefault();
+    addTag("attack");
+  }
 }
 
 function tickCurrentTime() {
