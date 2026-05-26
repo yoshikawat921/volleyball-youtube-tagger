@@ -395,19 +395,20 @@ function updateVideoTitleFromPlayer() {
   renderSettings();
 }
 
-function addTag(play) {
+function addTag(play, team = state.selectedTeam) {
   if (!state.project.youtubeVideoId) {
     alert("タグを追加する前にYouTube動画を読み込んでください。");
     return;
   }
+  state.selectedTeam = team;
   const tag = {
     id: createId(),
     youtubeVideoId: state.project.youtubeVideoId,
     time: Number(getCurrentTime().toFixed(2)),
-    team: state.selectedTeam,
+    team,
     play,
     jerseyNumber: state.selectedJerseyNumber,
-    label: makeLabel(state.selectedTeam, play, state.selectedJerseyNumber)
+    label: makeLabel(team, play, state.selectedJerseyNumber)
   };
 
   state.project.tags.push(tag);
@@ -1218,13 +1219,22 @@ function handleKeyboardShortcuts(event) {
     event.preventDefault();
     seekBy(event.shiftKey ? 5 : 1);
   }
-  if (event.key.toLowerCase() === "s") {
+  const shortcut = event.key.toLowerCase();
+  if (shortcut === "z") {
     event.preventDefault();
-    addTag("serve");
+    addTag("serve", "A");
   }
-  if (event.key.toLowerCase() === "a") {
+  if (shortcut === "x") {
     event.preventDefault();
-    addTag("attack");
+    addTag("attack", "A");
+  }
+  if (shortcut === "c") {
+    event.preventDefault();
+    addTag("serve", "B");
+  }
+  if (shortcut === "v") {
+    event.preventDefault();
+    addTag("attack", "B");
   }
 }
 
