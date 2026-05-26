@@ -509,7 +509,7 @@ function renderTeamAndJerseys() {
   jerseys.forEach((number) => {
     const button = document.createElement("button");
     button.type = "button";
-    button.textContent = `#${number}`;
+    button.textContent = number;
     button.classList.toggle("active", number === state.selectedJerseyNumber);
     button.addEventListener("click", () => {
       state.selectedJerseyNumber = number;

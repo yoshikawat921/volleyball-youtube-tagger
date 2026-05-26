@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Volleyball Quick Tagger</title>
-    <link rel="stylesheet" href="style.css?v=20260526-3">
+    <link rel="stylesheet" href="style.css?v=20260526-5">
   </head>
   <body>
     <header class="app-header">
@@ -64,7 +64,9 @@
               <h2 id="playerTitle">動画</h2>
               <p><span id="videoIdLabel">動画未読み込み</span></p>
             </div>
-            <div id="player" class="player-box" aria-label="YouTube動画プレイヤー"></div>
+            <div class="player-frame" aria-label="YouTube動画プレイヤー">
+              <div id="player"></div>
+            </div>
             <div class="playback-controls" aria-label="再生操作">
               <button id="seekBack30Button" type="button" class="skip-button">-30s</button>
               <button id="seekBack5Button" type="button" class="skip-button">-5s</button>
@@ -187,6 +189,6 @@
     </dialog>
 
     <script src="https://www.youtube.com/iframe_api"></script>
-    <script src="app.js?v=20260526-1"></script>
+    <script src="app.js?v=20260526-2"></script>
   </body>
 </html>
