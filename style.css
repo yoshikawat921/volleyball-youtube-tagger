@@ -45,6 +45,9 @@ button,
   justify-content: center;
   min-height: 48px;
   padding: 0.75rem 1rem;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  user-select: none;
 }
 
 button {
@@ -97,6 +100,8 @@ select {
   color: var(--ink);
   min-height: 46px;
   padding: 0.7rem 0.75rem;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
   width: 100%;
 }
 
@@ -519,9 +524,16 @@ td:nth-child(5) {
   gap: 0.5rem;
 }
 
+.replay-controls {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
 .replay-panel .button-row button {
+  font-size: 0.86rem;
   min-height: 44px;
-  padding: 0.65rem 0.9rem;
+  padding: 0.65rem 0.45rem;
+  white-space: nowrap;
 }
 
 .replay-panel .status-text {
@@ -795,9 +807,35 @@ td:nth-child(5) {
 
 @media (max-width: 680px) {
   .settings-grid,
-  .filter-grid,
-  .tag-actions {
+  .filter-grid {
     grid-template-columns: 1fr;
+  }
+
+  .settings-actions {
+    display: grid;
+    gap: 0.5rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    overflow: visible;
+  }
+
+  .settings-actions button,
+  .settings-actions .file-button {
+    font-size: 0.82rem;
+    min-width: 0;
+    padding: 0.65rem 0.35rem;
+    width: 100%;
+  }
+
+  .tag-actions {
+    gap: 0.5rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .tag-actions button {
+    font-size: 0.9rem;
+    min-width: 0;
+    padding-inline: 0.35rem;
+    white-space: nowrap;
   }
 
   .playback-controls {

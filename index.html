@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Volleyball Quick Tagger</title>
-    <link rel="stylesheet" href="style.css?v=20260526-5">
+    <link rel="stylesheet" href="style.css?v=20260526-8">
   </head>
   <body>
     <header class="app-header">
@@ -167,9 +167,11 @@
               </div>
             </div>
 
-            <div class="button-row">
-              <button id="playFilteredButton" type="button">絞り込みタグを連続再生</button>
-              <button id="stopReplayButton" type="button" class="secondary-button">再生停止</button>
+            <div class="button-row replay-controls">
+              <button id="playFilteredButton" type="button">連続再生</button>
+              <button id="previousReplayButton" type="button" class="secondary-button">前のプレー</button>
+              <button id="nextReplayButton" type="button" class="secondary-button">次のプレー</button>
+              <button id="stopReplayButton" type="button" class="secondary-button">再生終了</button>
             </div>
             <p id="replayStatus" class="status-text">再生停止中</p>
           </section>
@@ -189,6 +191,6 @@
     </dialog>
 
     <script src="https://www.youtube.com/iframe_api"></script>
-    <script src="app.js?v=20260526-2"></script>
+    <script src="app.js?v=20260526-5"></script>
   </body>
 </html>

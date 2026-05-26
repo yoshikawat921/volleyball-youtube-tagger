@@ -25,6 +25,7 @@ const state = {
   player: null,
   playerReady: false,
   recentlyAddedTagId: "",
+  recentlyAddedTimer: null,
   activeReplayTagId: "",
   replay: { active: false, tags: [], index: 0, clipEnd: 0, timer: null }
 };
@@ -65,6 +66,8 @@ const els = {
   afterHandle: document.querySelector("#afterHandle"),
   filteredCountLabel: document.querySelector("#filteredCountLabel"),
   playFilteredButton: document.querySelector("#playFilteredButton"),
+  previousReplayButton: document.querySelector("#previousReplayButton"),
+  nextReplayButton: document.querySelector("#nextReplayButton"),
   stopReplayButton: document.querySelector("#stopReplayButton"),
   replayStatus: document.querySelector("#replayStatus"),
   totalTagsLabel: document.querySelector("#totalTagsLabel"),
@@ -380,9 +383,23 @@ function addTag(play) {
   };
 
   state.project.tags.push(tag);
-  state.recentlyAddedTagId = tag.id;
+  markRecentlyAddedTag(tag.id);
   saveProject();
   render();
+}
+
+function markRecentlyAddedTag(tagId) {
+  if (state.recentlyAddedTimer) {
+    clearTimeout(state.recentlyAddedTimer);
+  }
+
+  state.recentlyAddedTagId = tagId;
+  state.recentlyAddedTimer = setTimeout(() => {
+    if (state.recentlyAddedTagId !== tagId) return;
+    state.recentlyAddedTagId = "";
+    state.recentlyAddedTimer = null;
+    renderTagTable();
+  }, 3000);
 }
 
 function sortedTags(tags = state.project.tags) {
@@ -737,12 +754,24 @@ function playFilteredClips() {
     setReplayStatus("再生できる絞り込みタグがありません。");
     return;
   }
+  state.replay.tags = tags;
+  playReplayIndex(0);
+}
+
+function playReplayIndex(index) {
+  const tags = state.replay.tags.length ? state.replay.tags : filteredTags();
+  if (!tags.length) {
+    setReplayStatus("再生できる絞り込みタグがありません。");
+    return;
+  }
+  const safeIndex = clamp(index, 0, tags.length - 1);
   state.replay.active = true;
   state.replay.tags = tags;
-  state.replay.index = 0;
-  setReplayStatus(`再生中 1 / ${tags.length}: ${tags[0].label}`);
-  focusTagRow(tags[0].id);
-  playClip(tags[0], true);
+  state.replay.index = safeIndex;
+  const tag = tags[safeIndex];
+  setReplayStatus(`再生中 ${safeIndex + 1} / ${tags.length}: ${tag.label}`);
+  focusTagRow(tag.id);
+  playClip(tag, true);
   clearReplayTimer();
   state.replay.timer = setInterval(checkReplayProgress, 120);
 }
@@ -757,10 +786,17 @@ function checkReplayProgress() {
     return;
   }
 
-  const tag = state.replay.tags[state.replay.index];
-  setReplayStatus(`再生中 ${state.replay.index + 1} / ${state.replay.tags.length}: ${tag.label}`);
-  focusTagRow(tag.id);
-  playClip(tag, true);
+  playReplayIndex(state.replay.index);
+}
+
+function moveReplayBy(direction) {
+  const tags = state.replay.tags.length ? state.replay.tags : filteredTags();
+  if (!tags.length) {
+    setReplayStatus("再生できる絞り込みタグがありません。");
+    return;
+  }
+  state.replay.tags = tags;
+  playReplayIndex(state.replay.index + direction);
 }
 
 function stopReplay(message = "再生停止中") {
@@ -802,6 +838,10 @@ async function resetProject() {
   state.selectedJerseyNumber = null;
   state.filters = { play: "", team: "", jerseyNumber: "" };
   state.recentlyAddedTagId = "";
+  if (state.recentlyAddedTimer) {
+    clearTimeout(state.recentlyAddedTimer);
+    state.recentlyAddedTimer = null;
+  }
   els.playFilter.value = "";
   els.teamFilter.value = "";
   els.jerseyFilter.value = "";
@@ -942,6 +982,8 @@ function bindEvents() {
   });
 
   els.playFilteredButton.addEventListener("click", playFilteredClips);
+  els.previousReplayButton.addEventListener("click", () => moveReplayBy(-1));
+  els.nextReplayButton.addEventListener("click", () => moveReplayBy(1));
   els.stopReplayButton.addEventListener("click", () => stopReplay());
   document.addEventListener("keydown", handleKeyboardShortcuts);
 }
