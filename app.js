@@ -532,7 +532,7 @@ function renderDriveSettings() {
 function renderDriveStatus(message) {
   let statusMessage = message;
   if (message) {
-    els.driveSummaryStatus.textContent = statusMessage;
+    if (els.driveSummaryStatus) els.driveSummaryStatus.textContent = statusMessage;
     return;
   }
   if (!state.driveSync.enabled) {
@@ -542,7 +542,7 @@ function renderDriveStatus(message) {
   } else {
     statusMessage = "Drive自動保存は有効です";
   }
-  els.driveSummaryStatus.textContent = statusMessage;
+  if (els.driveSummaryStatus) els.driveSummaryStatus.textContent = statusMessage;
 }
 
 function renderTeamAndJerseys() {
