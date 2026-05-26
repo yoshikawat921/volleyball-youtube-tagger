@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Volleyball Quick Tagger</title>
-    <link rel="stylesheet" href="style.css?v=20260527-2">
+    <link rel="stylesheet" href="style.css?v=20260527-3">
   </head>
   <body>
     <header class="app-header">
@@ -115,20 +115,20 @@
               <p>現在時刻: <strong id="currentTimeLabel">0:00.0</strong></p>
             </div>
 
+            <div class="tag-actions">
+              <button id="tagServeButton" type="button" class="serve-button">サーブをタグ</button>
+              <button id="tagSpikeButton" type="button" class="spike-button">アタックをタグ</button>
+            </div>
+
             <div class="segmented-control" aria-label="チーム選択">
               <button id="teamNoneButton" type="button" class="unset-button" data-team="">未選択</button>
-              <button id="teamAButton" type="button" class="active" data-team="A">チームA</button>
+              <button id="teamAButton" type="button" data-team="A">チームA</button>
               <button id="teamBButton" type="button" data-team="B">チームB</button>
             </div>
 
             <div>
               <div class="mini-heading">背番号</div>
               <div id="jerseyButtons" class="jersey-grid" aria-live="polite"></div>
-            </div>
-
-            <div class="tag-actions">
-              <button id="tagServeButton" type="button" class="serve-button">サーブをタグ</button>
-              <button id="tagSpikeButton" type="button" class="spike-button">アタックをタグ</button>
             </div>
           </section>
         </div>
@@ -219,6 +219,6 @@
     </dialog>
 
     <script src="https://www.youtube.com/iframe_api"></script>
-    <script src="app.js?v=20260527-3"></script>
+    <script src="app.js?v=20260527-4"></script>
   </body>
 </html>

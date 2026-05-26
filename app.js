@@ -31,6 +31,7 @@ const state = {
   },
   selectedTeam: "",
   selectedJerseyNumber: null,
+  quickEditTagId: "",
   filters: { play: "", team: "", jerseyNumber: "" },
   tableSort: { key: "time", direction: "asc" },
   preRoll: 3,
@@ -395,23 +396,23 @@ function updateVideoTitleFromPlayer() {
   renderSettings();
 }
 
-function addTag(play, team = state.selectedTeam) {
+function addTag(play, team = "") {
   if (!state.project.youtubeVideoId) {
     alert("タグを追加する前にYouTube動画を読み込んでください。");
     return;
   }
-  state.selectedTeam = team;
   const tag = {
     id: createId(),
     youtubeVideoId: state.project.youtubeVideoId,
     time: Number(getCurrentTime().toFixed(2)),
     team,
     play,
-    jerseyNumber: state.selectedJerseyNumber,
-    label: makeLabel(team, play, state.selectedJerseyNumber)
+    jerseyNumber: null,
+    label: makeLabel(team, play, null)
   };
 
   state.project.tags.push(tag);
+  state.quickEditTagId = tag.id;
   markRecentlyAddedTag(tag.id);
   saveProject();
   render();
@@ -479,6 +480,14 @@ function updateTag(id, updates) {
   Object.assign(tag, updates);
   tag.team = tag.team === "A" || tag.team === "B" ? tag.team : "";
   tag.jerseyNumber = normalizeJerseyNumber(tag.jerseyNumber);
+  if (!tag.team) {
+    tag.jerseyNumber = null;
+  } else {
+    const teamJerseys = state.project.teams[tag.team].jerseyNumbers;
+    if (tag.jerseyNumber !== null && !teamJerseys.includes(tag.jerseyNumber)) {
+      tag.jerseyNumber = null;
+    }
+  }
   tag.time = clamp(Number(tag.time) || 0, 0, Number.MAX_SAFE_INTEGER);
   tag.label = makeLabel(tag.team, tag.play, tag.jerseyNumber);
   saveProject();
@@ -487,6 +496,7 @@ function updateTag(id, updates) {
 
 function deleteTag(id) {
   state.project.tags = state.project.tags.filter((tag) => tag.id !== id);
+  if (state.quickEditTagId === id) state.quickEditTagId = "";
   saveProject();
   render();
 }
@@ -500,6 +510,18 @@ function buildJerseyOptions(selectedValue = "") {
   return ["", ...[...numbers].sort((a, b) => a - b)]
     .map((number) => {
       const label = number === "" ? "すべて" : `#${number}`;
+      const selected = String(number) === String(selectedValue) ? " selected" : "";
+      return `<option value="${number}"${selected}>${label}</option>`;
+    })
+    .join("");
+}
+
+function buildTagJerseyOptions(tag) {
+  const selectedValue = tag.jerseyNumber ?? "";
+  const numbers = tag.team ? state.project.teams[tag.team].jerseyNumbers : [];
+  return ["", ...numbers]
+    .map((number) => {
+      const label = number === "" ? "未入力" : String(number);
       const selected = String(number) === String(selectedValue) ? " selected" : "";
       return `<option value="${number}"${selected}>${label}</option>`;
     })
@@ -547,34 +569,36 @@ function renderDriveStatus(message) {
 }
 
 function renderTeamAndJerseys() {
-  els.teamNoneButton.classList.toggle("active", !state.selectedTeam);
-  els.teamAButton.classList.toggle("active", state.selectedTeam === "A");
-  els.teamBButton.classList.toggle("active", state.selectedTeam === "B");
+  const tag = getQuickEditTag();
+  const team = tag?.team || "";
+  const jerseyNumber = tag?.jerseyNumber ?? null;
+  const hasTag = Boolean(tag);
+
+  [els.teamNoneButton, els.teamAButton, els.teamBButton].forEach((button) => {
+    button.disabled = !hasTag;
+  });
+  els.teamNoneButton.classList.toggle("active", hasTag && !team);
+  els.teamAButton.classList.toggle("active", team === "A");
+  els.teamBButton.classList.toggle("active", team === "B");
   els.jerseyButtons.innerHTML = "";
 
   const noneButton = document.createElement("button");
   noneButton.type = "button";
   noneButton.textContent = "未選択";
   noneButton.className = "unset-button";
-  noneButton.classList.toggle("active", state.selectedJerseyNumber === null);
+  noneButton.disabled = !hasTag || !team;
+  noneButton.classList.toggle("active", hasTag && jerseyNumber === null);
   noneButton.addEventListener("click", () => {
-    state.selectedJerseyNumber = null;
+    updateQuickEditTag({ jerseyNumber: null });
     renderTeamAndJerseys();
   });
   els.jerseyButtons.append(noneButton);
 
-  if (!state.selectedTeam) {
-    state.selectedJerseyNumber = null;
-    noneButton.classList.add("active");
+  if (!hasTag || !team) {
     return;
   }
 
-  const jerseys = state.project.teams[state.selectedTeam].jerseyNumbers;
-  if (!jerseys.includes(state.selectedJerseyNumber)) {
-    state.selectedJerseyNumber = null;
-    noneButton.classList.add("active");
-  }
-
+  const jerseys = state.project.teams[team].jerseyNumbers;
   if (!jerseys.length) {
     return;
   }
@@ -583,13 +607,23 @@ function renderTeamAndJerseys() {
     const button = document.createElement("button");
     button.type = "button";
     button.textContent = number;
-    button.classList.toggle("active", number === state.selectedJerseyNumber);
+    button.classList.toggle("active", number === jerseyNumber);
     button.addEventListener("click", () => {
-      state.selectedJerseyNumber = number;
+      updateQuickEditTag({ jerseyNumber: number });
       renderTeamAndJerseys();
     });
     els.jerseyButtons.append(button);
   });
+}
+
+function getQuickEditTag() {
+  return state.project.tags.find((tag) => tag.id === state.quickEditTagId) || null;
+}
+
+function updateQuickEditTag(updates) {
+  const tag = getQuickEditTag();
+  if (!tag) return;
+  updateTag(tag.id, updates);
 }
 
 function renderReplayWindow() {
@@ -702,7 +736,11 @@ function renderTagTable() {
           <option value="attack"${tag.play === "attack" ? " selected" : ""}>アタック</option>
         </select>
       </td>
-      <td><input class="jersey-input" type="number" min="0" step="1" value="${tag.jerseyNumber ?? ""}" placeholder="未選択" aria-label="背番号"></td>
+      <td>
+        <select class="jersey-input" aria-label="背番号" ${tag.team ? "" : "disabled"}>
+          ${buildTagJerseyOptions(tag)}
+        </select>
+      </td>
       <td>
         <div class="action-buttons">
           <button type="button" data-action="seek" class="table-play-button">再生</button>
@@ -715,7 +753,7 @@ function renderTagTable() {
       updateTag(tag.id, { time: Number(parseTime(event.target.value).toFixed(2)) });
     });
     row.querySelector(".team-input").addEventListener("change", (event) => {
-      updateTag(tag.id, { team: event.target.value });
+      updateTag(tag.id, { team: event.target.value, jerseyNumber: null });
     });
     row.querySelector(".play-input").addEventListener("change", (event) => {
       updateTag(tag.id, { play: event.target.value });
@@ -1022,6 +1060,7 @@ async function resetProject() {
   ensureProjectId();
   state.selectedTeam = "";
   state.selectedJerseyNumber = null;
+  state.quickEditTagId = "";
   state.filters = { play: "", team: "", jerseyNumber: "" };
   state.recentlyAddedTagId = "";
   if (state.recentlyAddedTimer) {
@@ -1123,6 +1162,7 @@ async function importProject(file) {
   state.filters = { play: "", team: "", jerseyNumber: "" };
   state.selectedTeam = "";
   state.selectedJerseyNumber = null;
+  state.quickEditTagId = "";
   stopReplay("再生停止中");
   cueCurrentVideo();
   scheduleVideoTitleSync();
@@ -1197,9 +1237,7 @@ function bindEvents() {
 }
 
 function selectTeam(team) {
-  state.selectedTeam = team;
-  state.selectedJerseyNumber = null;
-  renderTeamAndJerseys();
+  updateQuickEditTag({ team, jerseyNumber: null });
 }
 
 function handleKeyboardShortcuts(event) {
@@ -1222,19 +1260,11 @@ function handleKeyboardShortcuts(event) {
   const shortcut = event.key.toLowerCase();
   if (shortcut === "z") {
     event.preventDefault();
-    addTag("serve", "A");
+    addTag("serve");
   }
   if (shortcut === "x") {
     event.preventDefault();
-    addTag("attack", "A");
-  }
-  if (shortcut === "c") {
-    event.preventDefault();
-    addTag("serve", "B");
-  }
-  if (shortcut === "v") {
-    event.preventDefault();
-    addTag("attack", "B");
+    addTag("attack");
   }
 }
 

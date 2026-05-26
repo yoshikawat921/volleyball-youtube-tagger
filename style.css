@@ -540,6 +540,13 @@ td:nth-child(5) {
   color: #fff;
 }
 
+.segmented-control button:disabled,
+.jersey-grid button:disabled {
+  color: var(--muted);
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
 .mini-heading {
   color: var(--muted);
   font-size: 0.82rem;
@@ -573,6 +580,7 @@ td:nth-child(5) {
 .tag-actions {
   display: grid;
   grid-template-columns: 1fr 1fr;
+  margin-bottom: 0.85rem;
   margin-top: 0.85rem;
 }
 
