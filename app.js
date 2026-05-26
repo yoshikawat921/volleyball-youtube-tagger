@@ -1,10 +1,15 @@
 const STORAGE_KEY = "volleyball-youtube-tagger-project-v1";
+const DRIVE_SYNC_KEY = "volleyball-youtube-tagger-drive-sync-v1";
 const DEFAULT_LEGACY_JERSEY = 1;
 const LEGACY_DEFAULT_JERSEYS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
 const RANGE_MIN = -5;
 const RANGE_MAX = 5;
+const DRIVE_SAVE_DELAY_MS = 2500;
+const DEFAULT_DRIVE_WEB_APP_URL = "";
+const DEFAULT_DRIVE_FOLDER_ID = "";
 
 const defaultProject = {
+  projectId: "",
   projectName: "",
   youtubeVideoId: "",
   teams: {
@@ -16,6 +21,14 @@ const defaultProject = {
 
 const state = {
   project: JSON.parse(JSON.stringify(defaultProject)),
+  driveSync: {
+    enabled: false,
+    webAppUrl: DEFAULT_DRIVE_WEB_APP_URL,
+    folderId: DEFAULT_DRIVE_FOLDER_ID,
+    secret: "",
+    timer: null,
+    saving: false
+  },
   selectedTeam: "",
   selectedJerseyNumber: null,
   filters: { play: "", team: "", jerseyNumber: "" },
@@ -41,6 +54,12 @@ const els = {
   exportProjectButton: document.querySelector("#exportProjectButton"),
   resetProjectButton: document.querySelector("#resetProjectButton"),
   importProjectInput: document.querySelector("#importProjectInput"),
+  driveAutoSaveEnabled: document.querySelector("#driveAutoSaveEnabled"),
+  driveWebAppUrlInput: document.querySelector("#driveWebAppUrlInput"),
+  driveFolderIdInput: document.querySelector("#driveFolderIdInput"),
+  driveSecretInput: document.querySelector("#driveSecretInput"),
+  driveSaveNowButton: document.querySelector("#driveSaveNowButton"),
+  driveSaveStatus: document.querySelector("#driveSaveStatus"),
   videoIdLabel: document.querySelector("#videoIdLabel"),
   currentTimeLabel: document.querySelector("#currentTimeLabel"),
   saveStatus: document.querySelector("#saveStatus"),
@@ -114,6 +133,7 @@ function normalizeProject(project) {
   }
 
   const normalized = {
+    projectId: project.projectId || createId(),
     projectName: normalizeProjectName(project.projectName),
     youtubeVideoId: project.youtubeVideoId || "",
     teams: {
@@ -169,6 +189,7 @@ function sameNumberList(left, right) {
 
 function normalizeLegacySceneProject(project) {
   return {
+    projectId: project.projectId || createId(),
     projectName: normalizeProjectName(project.title || project.projectName),
     youtubeVideoId: project.youtubeVideoId || "",
     teams: {
@@ -229,6 +250,13 @@ function parseJerseyNumbers(value) {
 function createId() {
   if (crypto.randomUUID) return crypto.randomUUID();
   return `tag-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+}
+
+function ensureProjectId() {
+  if (!state.project.projectId) {
+    state.project.projectId = createId();
+  }
+  return state.project.projectId;
 }
 
 function makeLabel(team, play, jerseyNumber) {
@@ -477,6 +505,7 @@ function buildJerseyOptions(selectedValue = "") {
 }
 
 function renderSettings() {
+  ensureProjectId();
   els.projectNameInput.value = state.project.projectName;
   els.youtubeInput.value = state.project.youtubeVideoId;
   els.teamANameInput.value = state.project.teams.A.name;
@@ -488,6 +517,31 @@ function renderSettings() {
   els.teamBButton.textContent = state.project.teams.B.name ? `B: ${state.project.teams.B.name}` : "B";
   els.teamFilter.options[1].textContent = state.project.teams.A.name ? `A: ${state.project.teams.A.name}` : "A";
   els.teamFilter.options[2].textContent = state.project.teams.B.name ? `B: ${state.project.teams.B.name}` : "B";
+  renderDriveSettings();
+}
+
+function renderDriveSettings() {
+  els.driveAutoSaveEnabled.checked = state.driveSync.enabled;
+  els.driveWebAppUrlInput.value = state.driveSync.webAppUrl;
+  els.driveFolderIdInput.value = state.driveSync.folderId;
+  els.driveSecretInput.value = state.driveSync.secret;
+  renderDriveStatus();
+}
+
+function renderDriveStatus(message) {
+  if (message) {
+    els.driveSaveStatus.textContent = message;
+    return;
+  }
+  if (!state.driveSync.enabled) {
+    els.driveSaveStatus.textContent = "Drive自動保存はオフです";
+    return;
+  }
+  if (!hasDriveSyncSettings()) {
+    els.driveSaveStatus.textContent = "Drive自動保存の設定が不足しています";
+    return;
+  }
+  els.driveSaveStatus.textContent = "Drive自動保存は有効です";
 }
 
 function renderTeamAndJerseys() {
@@ -823,8 +877,129 @@ function setStatus(message) {
 }
 
 function saveProject() {
+  ensureProjectId();
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state.project));
   setStatus("ローカルに保存済み");
+  scheduleDriveSave();
+}
+
+function readDriveSettingsFromInputs(schedule = true) {
+  state.driveSync.enabled = els.driveAutoSaveEnabled.checked;
+  state.driveSync.webAppUrl = els.driveWebAppUrlInput.value.trim();
+  state.driveSync.folderId = els.driveFolderIdInput.value.trim();
+  state.driveSync.secret = els.driveSecretInput.value;
+  localStorage.setItem(DRIVE_SYNC_KEY, JSON.stringify({
+    enabled: state.driveSync.enabled,
+    webAppUrl: state.driveSync.webAppUrl,
+    folderId: state.driveSync.folderId,
+    secret: state.driveSync.secret
+  }));
+  renderDriveStatus();
+  if (schedule && state.driveSync.enabled) scheduleDriveSave();
+}
+
+function hasDriveSyncSettings() {
+  return Boolean(state.driveSync.webAppUrl && state.driveSync.folderId);
+}
+
+function scheduleDriveSave() {
+  if (state.driveSync.timer) {
+    clearTimeout(state.driveSync.timer);
+    state.driveSync.timer = null;
+  }
+  if (!state.driveSync.enabled) return;
+  if (!hasDriveSyncSettings()) {
+    renderDriveStatus();
+    return;
+  }
+  renderDriveStatus("Drive自動保存待機中...");
+  state.driveSync.timer = setTimeout(() => {
+    saveProjectToDrive().catch(() => {
+      renderDriveStatus("Drive保存に失敗しました。JSON書き出しでバックアップしてください。");
+    });
+  }, DRIVE_SAVE_DELAY_MS);
+}
+
+async function saveProjectToDrive() {
+  readDriveSettingsFromInputs(false);
+  if (!state.driveSync.enabled) {
+    renderDriveStatus();
+    return;
+  }
+  if (!hasDriveSyncSettings()) {
+    renderDriveStatus("Drive自動保存の設定が不足しています");
+    return;
+  }
+  if (state.driveSync.saving) return;
+
+  ensureProjectId();
+  state.driveSync.saving = true;
+  renderDriveStatus("Driveへ保存中...");
+  const payload = {
+    action: "saveProject",
+    secret: state.driveSync.secret,
+    folderId: state.driveSync.folderId,
+    filename: buildDriveFilename(),
+    project: state.project,
+    savedAt: new Date().toISOString()
+  };
+
+  try {
+    await submitDrivePayload(payload);
+    renderDriveStatus(`Driveへ送信しました。フォルダを確認してください ${formatStatusTime(new Date())}`);
+  } finally {
+    state.driveSync.saving = false;
+  }
+}
+
+async function submitDrivePayload(payload) {
+  const encoded = base64UrlEncode(JSON.stringify(payload));
+  const chunkSize = 1200;
+  const total = Math.ceil(encoded.length / chunkSize);
+  const uploadId = createId();
+
+  for (let index = 0; index < total; index += 1) {
+    const chunk = encoded.slice(index * chunkSize, (index + 1) * chunkSize);
+    await sendDriveChunk({ payload, uploadId, index, total, chunk });
+  }
+}
+
+async function sendDriveChunk({ payload, uploadId, index, total, chunk }) {
+  const url = new URL(state.driveSync.webAppUrl);
+  url.searchParams.set("action", "saveProjectChunk");
+  url.searchParams.set("secret", state.driveSync.secret);
+  url.searchParams.set("folderId", state.driveSync.folderId);
+  url.searchParams.set("filename", payload.filename);
+  url.searchParams.set("uploadId", uploadId);
+  url.searchParams.set("index", String(index));
+  url.searchParams.set("total", String(total));
+  url.searchParams.set("chunk", chunk);
+  await fetch(url.toString(), {
+    method: "GET",
+    mode: "no-cors",
+    cache: "no-store"
+  });
+}
+
+function base64UrlEncode(value) {
+  const bytes = new TextEncoder().encode(value);
+  let binary = "";
+  for (let index = 0; index < bytes.length; index += 1) {
+    binary += String.fromCharCode(bytes[index]);
+  }
+  return btoa(binary)
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/g, "");
+}
+
+function buildDriveFilename() {
+  const title = state.project.projectName || state.project.youtubeVideoId || "volleyball-project";
+  return `${safeFilename(title)}.json`;
+}
+
+function formatStatusTime(date) {
+  return `${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}:${String(date.getSeconds()).padStart(2, "0")}`;
 }
 
 async function resetProject() {
@@ -834,6 +1009,7 @@ async function resetProject() {
   stopReplay("再生停止中");
   localStorage.removeItem(STORAGE_KEY);
   state.project = JSON.parse(JSON.stringify(defaultProject));
+  ensureProjectId();
   state.selectedTeam = "";
   state.selectedJerseyNumber = null;
   state.filters = { play: "", team: "", jerseyNumber: "" };
@@ -874,6 +1050,20 @@ function loadFromLocalStorage() {
     state.project = normalizeProject(JSON.parse(saved));
   } catch {
     localStorage.removeItem(STORAGE_KEY);
+  }
+}
+
+function loadDriveSettings() {
+  const saved = localStorage.getItem(DRIVE_SYNC_KEY);
+  if (!saved) return;
+  try {
+    const settings = JSON.parse(saved);
+    state.driveSync.enabled = Boolean(settings.enabled);
+    state.driveSync.webAppUrl = String(settings.webAppUrl || DEFAULT_DRIVE_WEB_APP_URL);
+    state.driveSync.folderId = String(settings.folderId || DEFAULT_DRIVE_FOLDER_ID);
+    state.driveSync.secret = String(settings.secret || "");
+  } catch {
+    localStorage.removeItem(DRIVE_SYNC_KEY);
   }
 }
 
@@ -942,6 +1132,14 @@ function bindEvents() {
 
   [els.teamANameInput, els.teamBNameInput, els.teamAJerseysInput, els.teamBJerseysInput].forEach((input) => {
     input.addEventListener("change", applySettingsFromInputs);
+  });
+  [els.driveAutoSaveEnabled, els.driveWebAppUrlInput, els.driveFolderIdInput, els.driveSecretInput].forEach((input) => {
+    input.addEventListener("change", () => readDriveSettingsFromInputs());
+  });
+  els.driveSaveNowButton.addEventListener("click", () => {
+    saveProjectToDrive().catch(() => {
+      renderDriveStatus("Drive保存に失敗しました。設定を確認してください。");
+    });
   });
 
   els.teamAButton.addEventListener("click", () => selectTeam("A"));
@@ -1019,6 +1217,8 @@ function tickCurrentTime() {
 }
 
 loadFromLocalStorage();
+loadDriveSettings();
+ensureProjectId();
 state.selectedJerseyNumber = null;
 bindEvents();
 render();

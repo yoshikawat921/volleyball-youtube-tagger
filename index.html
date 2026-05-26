@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Volleyball Quick Tagger</title>
-    <link rel="stylesheet" href="style.css?v=20260526-8">
+    <link rel="stylesheet" href="style.css?v=20260526-9">
   </head>
   <body>
     <header class="app-header">
@@ -55,6 +55,32 @@
           <button id="exportProjectButton" type="button" class="export-button">保存：JSON書き出し</button>
           <button id="resetProjectButton" type="button" class="reset-button">初期化</button>
         </div>
+
+        <details class="drive-sync-panel">
+          <summary>Drive自動保存</summary>
+          <div class="drive-sync-grid">
+            <label class="drive-sync-toggle">
+              <input id="driveAutoSaveEnabled" type="checkbox">
+              Drive自動保存を有効にする
+            </label>
+            <label>
+              Apps Script WebアプリURL
+              <input id="driveWebAppUrlInput" type="url" placeholder="https://script.google.com/macros/s/.../exec" autocomplete="off">
+            </label>
+            <label>
+              保存先フォルダID
+              <input id="driveFolderIdInput" type="text" placeholder="Google DriveフォルダID" autocomplete="off">
+            </label>
+            <label>
+              保存キー
+              <input id="driveSecretInput" type="password" autocomplete="off">
+            </label>
+          </div>
+          <div class="button-row drive-sync-actions">
+            <button id="driveSaveNowButton" type="button" class="secondary-button">今すぐDrive保存</button>
+            <p id="driveSaveStatus" class="status-text">Drive自動保存は未設定です</p>
+          </div>
+        </details>
       </section>
 
       <section class="main-grid">
@@ -191,6 +217,6 @@
     </dialog>
 
     <script src="https://www.youtube.com/iframe_api"></script>
-    <script src="app.js?v=20260526-5"></script>
+    <script src="app.js?v=20260527-1"></script>
   </body>
 </html>
