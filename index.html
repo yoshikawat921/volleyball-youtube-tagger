@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Volleyball Quick Tagger</title>
-    <link rel="stylesheet" href="style.css?v=20260525-18">
+    <link rel="stylesheet" href="style.css?v=20260526-3">
   </head>
   <body>
     <header class="app-header">
@@ -157,13 +157,11 @@
             </div>
 
             <div class="replay-window">
-              <div>
-                <div class="mini-heading">前</div>
-                <div id="preRollButtons" class="number-picker"></div>
-              </div>
-              <div>
-                <div class="mini-heading">後</div>
-                <div id="postRollButtons" class="number-picker"></div>
+              <div id="replayRangeSlider" class="range-slider" aria-label="再生範囲">
+                <div class="range-track"></div>
+                <div id="replayRangeFill" class="range-fill"></div>
+                <button id="beforeHandle" type="button" class="range-handle before-handle" aria-label="前の秒数"></button>
+                <button id="afterHandle" type="button" class="range-handle after-handle" aria-label="後の秒数"></button>
               </div>
             </div>
 
@@ -189,6 +187,6 @@
     </dialog>
 
     <script src="https://www.youtube.com/iframe_api"></script>
-    <script src="app.js?v=20260525-10"></script>
+    <script src="app.js?v=20260526-1"></script>
   </body>
 </html>

@@ -1,6 +1,8 @@
 const STORAGE_KEY = "volleyball-youtube-tagger-project-v1";
 const DEFAULT_LEGACY_JERSEY = 1;
 const LEGACY_DEFAULT_JERSEYS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+const RANGE_MIN = -5;
+const RANGE_MAX = 5;
 
 const defaultProject = {
   projectName: "",
@@ -57,8 +59,10 @@ const els = {
   playFilter: document.querySelector("#playFilter"),
   teamFilter: document.querySelector("#teamFilter"),
   jerseyFilter: document.querySelector("#jerseyFilter"),
-  preRollButtons: document.querySelector("#preRollButtons"),
-  postRollButtons: document.querySelector("#postRollButtons"),
+  replayRangeSlider: document.querySelector("#replayRangeSlider"),
+  replayRangeFill: document.querySelector("#replayRangeFill"),
+  beforeHandle: document.querySelector("#beforeHandle"),
+  afterHandle: document.querySelector("#afterHandle"),
   filteredCountLabel: document.querySelector("#filteredCountLabel"),
   playFilteredButton: document.querySelector("#playFilteredButton"),
   stopReplayButton: document.querySelector("#stopReplayButton"),
@@ -516,26 +520,76 @@ function renderTeamAndJerseys() {
 }
 
 function renderReplayWindow() {
-  renderNumberPicker(els.preRollButtons, state.preRoll, (value) => {
-    state.preRoll = value;
-    renderReplayWindow();
-  });
-  renderNumberPicker(els.postRollButtons, state.postRoll, (value) => {
-    state.postRoll = value;
-    renderReplayWindow();
-  });
+  const beforeValue = -state.preRoll;
+  const afterValue = state.postRoll;
+  const beforePosition = rangePercent(beforeValue);
+  const afterPosition = rangePercent(afterValue);
+
+  els.replayRangeFill.style.left = `${beforePosition}%`;
+  els.replayRangeFill.style.width = `${afterPosition - beforePosition}%`;
+  updateRangeHandle(els.beforeHandle, beforeValue, beforePosition);
+  updateRangeHandle(els.afterHandle, afterValue, afterPosition);
 }
 
-function renderNumberPicker(container, selected, onSelect) {
-  container.innerHTML = "";
-  for (let value = 0; value <= 5; value += 1) {
-    const button = document.createElement("button");
-    button.type = "button";
-    button.textContent = `${value}s`;
-    button.classList.toggle("active", value === selected);
-    button.addEventListener("click", () => onSelect(value));
-    container.append(button);
+function updateRangeHandle(handle, value, position) {
+  handle.style.left = `${position}%`;
+  handle.textContent = `${value > 0 ? "+" : ""}${value}s`;
+  handle.classList.toggle("is-zero", value === 0);
+}
+
+function rangePercent(value) {
+  return ((value - RANGE_MIN) / (RANGE_MAX - RANGE_MIN)) * 100;
+}
+
+function valueFromPointer(event) {
+  const rect = els.replayRangeSlider.getBoundingClientRect();
+  const ratio = clamp((event.clientX - rect.left) / rect.width, 0, 1);
+  return Math.round(RANGE_MIN + ratio * (RANGE_MAX - RANGE_MIN));
+}
+
+function setReplayRangeValue(handleType, value) {
+  const safeValue = clamp(value, handleType === "before" ? RANGE_MIN : 0, handleType === "before" ? 0 : RANGE_MAX);
+  if (handleType === "before") {
+    state.preRoll = Math.abs(safeValue);
+  } else {
+    state.postRoll = safeValue;
   }
+  renderReplayWindow();
+}
+
+function startRangeDrag(handleType, event) {
+  event.preventDefault();
+  event.stopPropagation();
+  const pointerId = event.pointerId;
+  event.currentTarget.setPointerCapture(pointerId);
+  setReplayRangeValue(handleType, valueFromPointer(event));
+
+  const move = (moveEvent) => setReplayRangeValue(handleType, valueFromPointer(moveEvent));
+  const stop = () => {
+    document.removeEventListener("pointermove", move);
+    document.removeEventListener("pointerup", stop);
+    document.removeEventListener("pointercancel", stop);
+  };
+
+  document.addEventListener("pointermove", move);
+  document.addEventListener("pointerup", stop);
+  document.addEventListener("pointercancel", stop);
+}
+
+function setNearestRangeHandle(event) {
+  const value = valueFromPointer(event);
+  setReplayRangeValue(value <= 0 ? "before" : "after", value);
+}
+
+function nudgeRangeHandle(handleType, direction) {
+  const currentValue = handleType === "before" ? -state.preRoll : state.postRoll;
+  setReplayRangeValue(handleType, currentValue + direction);
+}
+
+function handleRangeKeydown(handleType, event) {
+  if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+  event.preventDefault();
+  nudgeRangeHandle(handleType, event.key === "ArrowRight" ? 1 : -1);
 }
 
 function renderFilters() {
@@ -855,6 +909,13 @@ function bindEvents() {
   els.teamNoneButton.addEventListener("click", () => selectTeam(""));
   els.tagServeButton.addEventListener("click", () => addTag("serve"));
   els.tagSpikeButton.addEventListener("click", () => addTag("attack"));
+  els.beforeHandle.addEventListener("pointerdown", (event) => startRangeDrag("before", event));
+  els.afterHandle.addEventListener("pointerdown", (event) => startRangeDrag("after", event));
+  els.beforeHandle.addEventListener("click", (event) => event.stopPropagation());
+  els.afterHandle.addEventListener("click", (event) => event.stopPropagation());
+  els.beforeHandle.addEventListener("keydown", (event) => handleRangeKeydown("before", event));
+  els.afterHandle.addEventListener("keydown", (event) => handleRangeKeydown("after", event));
+  els.replayRangeSlider.addEventListener("click", setNearestRangeHandle);
   document.querySelectorAll(".sort-button").forEach((button) => {
     button.addEventListener("click", () => setTableSort(button.dataset.sortKey));
   });
