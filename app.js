@@ -59,7 +59,7 @@ const els = {
   driveFolderIdInput: document.querySelector("#driveFolderIdInput"),
   driveSecretInput: document.querySelector("#driveSecretInput"),
   driveSaveNowButton: document.querySelector("#driveSaveNowButton"),
-  driveSaveStatus: document.querySelector("#driveSaveStatus"),
+  driveSummaryStatus: document.querySelector("#driveSummaryStatus"),
   videoIdLabel: document.querySelector("#videoIdLabel"),
   currentTimeLabel: document.querySelector("#currentTimeLabel"),
   saveStatus: document.querySelector("#saveStatus"),
@@ -414,6 +414,7 @@ function addTag(play) {
   markRecentlyAddedTag(tag.id);
   saveProject();
   render();
+  scrollTagRowIntoView(tag.id);
 }
 
 function markRecentlyAddedTag(tagId) {
@@ -529,19 +530,19 @@ function renderDriveSettings() {
 }
 
 function renderDriveStatus(message) {
+  let statusMessage = message;
   if (message) {
-    els.driveSaveStatus.textContent = message;
+    els.driveSummaryStatus.textContent = statusMessage;
     return;
   }
   if (!state.driveSync.enabled) {
-    els.driveSaveStatus.textContent = "Drive自動保存はオフです";
-    return;
+    statusMessage = "Drive自動保存はオフです";
+  } else if (!hasDriveSyncSettings()) {
+    statusMessage = "Drive自動保存の設定が不足しています";
+  } else {
+    statusMessage = "Drive自動保存は有効です";
   }
-  if (!hasDriveSyncSettings()) {
-    els.driveSaveStatus.textContent = "Drive自動保存の設定が不足しています";
-    return;
-  }
-  els.driveSaveStatus.textContent = "Drive自動保存は有効です";
+  els.driveSummaryStatus.textContent = statusMessage;
 }
 
 function renderTeamAndJerseys() {
@@ -744,6 +745,14 @@ function focusTagRow(tagId, scroll = true) {
   if (!row) return;
   row.classList.add("active-replay-row");
   if (!scroll) return;
+
+  const targetTop = row.offsetTop - (els.tagTableScroll.clientHeight / 2) + (row.offsetHeight / 2);
+  els.tagTableScroll.scrollTo({ top: Math.max(0, targetTop), behavior: "smooth" });
+}
+
+function scrollTagRowIntoView(tagId) {
+  const row = els.tagTableBody.querySelector(`[data-tag-id="${CSS.escape(tagId)}"]`);
+  if (!row) return;
 
   const targetTop = row.offsetTop - (els.tagTableScroll.clientHeight / 2) + (row.offsetHeight / 2);
   els.tagTableScroll.scrollTo({ top: Math.max(0, targetTop), behavior: "smooth" });

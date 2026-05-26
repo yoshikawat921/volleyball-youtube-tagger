@@ -57,7 +57,10 @@
         </div>
 
         <details class="drive-sync-panel">
-          <summary>Drive自動保存</summary>
+          <summary>
+            <span class="drive-summary-title">Drive自動保存</span>
+            <span id="driveSummaryStatus" class="drive-summary-status">未設定</span>
+          </summary>
           <div class="drive-sync-grid">
             <label class="drive-sync-toggle">
               <input id="driveAutoSaveEnabled" type="checkbox">
@@ -78,7 +81,6 @@
           </div>
           <div class="button-row drive-sync-actions">
             <button id="driveSaveNowButton" type="button" class="secondary-button">今すぐDrive保存</button>
-            <p id="driveSaveStatus" class="status-text">Drive自動保存は未設定です</p>
           </div>
         </details>
       </section>

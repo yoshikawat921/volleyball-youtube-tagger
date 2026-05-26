@@ -267,12 +267,48 @@ td:nth-child(5) {
 }
 
 .drive-sync-panel summary {
+  align-items: center;
   color: var(--accent-dark);
   cursor: pointer;
+  display: flex;
   font-weight: 900;
+  gap: 0.75rem;
+  justify-content: space-between;
   list-style-position: inside;
   touch-action: manipulation;
   user-select: none;
+}
+
+.drive-sync-panel summary::-webkit-details-marker {
+  display: none;
+}
+
+.drive-sync-panel summary::before {
+  content: "▶";
+  flex: 0 0 auto;
+  font-size: 0.75rem;
+  transform: translateY(-0.02rem);
+}
+
+.drive-sync-panel[open] summary::before {
+  content: "▼";
+}
+
+.drive-summary-title {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.drive-summary-status {
+  color: var(--muted);
+  flex: 0 1 auto;
+  font-size: 0.9rem;
+  font-weight: 800;
+  min-width: 0;
+  overflow: hidden;
+  text-align: right;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .drive-sync-grid {
