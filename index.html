@@ -29,11 +29,11 @@
             <input id="projectNameInput" type="text" placeholder="動画読み込み後に自動取得" autocomplete="off" readonly>
           </label>
           <label>
-            チームA名称（映像の手前側）
+            チームA名称
             <input id="teamANameInput" type="text" autocomplete="off">
           </label>
           <label>
-            チームB名称（映像の奥側）
+            チームB名称
             <input id="teamBNameInput" type="text" autocomplete="off">
           </label>
         </div>
@@ -107,23 +107,23 @@
               <p>現在時刻: <strong id="currentTimeLabel">0:00.0</strong></p>
             </div>
 
-            <p class="tagging-hint">ボールヒットに合わせてタグ付け</p>
             <div class="tag-actions tag-actions-grid">
-              <button id="tagBServeButton" type="button" class="serve-button" data-team="B" data-play="serve">
-                <span id="tagBServeTeamLabel">B</span>
-                <span>サーブをタグ</span>
+              <button id="tagTopLeftButton" type="button" class="serve-button" data-position="topLeft" data-team="B" data-play="serve">
+                <span id="tagTopLeftTeamLabel">B</span>
+                <span>サーブ</span>
               </button>
-              <button id="tagBAttackButton" type="button" class="spike-button" data-team="B" data-play="attack">
-                <span id="tagBAttackTeamLabel">B</span>
-                <span>アタックをタグ</span>
+              <button id="tagTopRightButton" type="button" class="spike-button" data-position="topRight" data-team="B" data-play="attack">
+                <span id="tagTopRightTeamLabel">B</span>
+                <span>アタック</span>
               </button>
-              <button id="tagAServeButton" type="button" class="serve-button" data-team="A" data-play="serve">
-                <span id="tagAServeTeamLabel">A</span>
-                <span>サーブをタグ</span>
+              <button id="courtChangeButton" type="button" class="court-change-button">コートチェンジ</button>
+              <button id="tagBottomLeftButton" type="button" class="serve-button" data-position="bottomLeft" data-team="A" data-play="serve">
+                <span id="tagBottomLeftTeamLabel">A</span>
+                <span>サーブ</span>
               </button>
-              <button id="tagAAttackButton" type="button" class="spike-button" data-team="A" data-play="attack">
-                <span id="tagAAttackTeamLabel">A</span>
-                <span>アタックをタグ</span>
+              <button id="tagBottomRightButton" type="button" class="spike-button" data-position="bottomRight" data-team="A" data-play="attack">
+                <span id="tagBottomRightTeamLabel">A</span>
+                <span>アタック</span>
               </button>
             </div>
           </section>

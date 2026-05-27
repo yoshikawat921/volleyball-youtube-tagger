@@ -37,7 +37,8 @@ const state = {
   recentlyAddedTimer: null,
   activeReplayTagId: "",
   replayStatusText: "再生停止中",
-  replay: { active: false, tags: [], index: 0, clipEnd: 0, timer: null }
+  replay: { active: false, tags: [], index: 0, clipEnd: 0, timer: null },
+  courtChanged: false
 };
 
 const els = {
@@ -58,14 +59,15 @@ const els = {
   videoIdLabel: document.querySelector("#videoIdLabel"),
   currentTimeLabel: document.querySelector("#currentTimeLabel"),
   saveStatus: document.querySelector("#saveStatus"),
-  tagAServeButton: document.querySelector("#tagAServeButton"),
-  tagAAttackButton: document.querySelector("#tagAAttackButton"),
-  tagBServeButton: document.querySelector("#tagBServeButton"),
-  tagBAttackButton: document.querySelector("#tagBAttackButton"),
-  tagAServeTeamLabel: document.querySelector("#tagAServeTeamLabel"),
-  tagAAttackTeamLabel: document.querySelector("#tagAAttackTeamLabel"),
-  tagBServeTeamLabel: document.querySelector("#tagBServeTeamLabel"),
-  tagBAttackTeamLabel: document.querySelector("#tagBAttackTeamLabel"),
+  tagTopLeftButton: document.querySelector("#tagTopLeftButton"),
+  tagTopRightButton: document.querySelector("#tagTopRightButton"),
+  tagBottomLeftButton: document.querySelector("#tagBottomLeftButton"),
+  tagBottomRightButton: document.querySelector("#tagBottomRightButton"),
+  tagTopLeftTeamLabel: document.querySelector("#tagTopLeftTeamLabel"),
+  tagTopRightTeamLabel: document.querySelector("#tagTopRightTeamLabel"),
+  tagBottomLeftTeamLabel: document.querySelector("#tagBottomLeftTeamLabel"),
+  tagBottomRightTeamLabel: document.querySelector("#tagBottomRightTeamLabel"),
+  courtChangeButton: document.querySelector("#courtChangeButton"),
   playPauseButton: document.querySelector("#playPauseButton"),
   seekBack1Button: document.querySelector("#seekBack1Button"),
   seekForward1Button: document.querySelector("#seekForward1Button"),
@@ -437,12 +439,43 @@ function renderSettings() {
 }
 
 function renderTagButtonLabels() {
-  const teamALabel = state.project.teams.A.name ? `A：${state.project.teams.A.name}` : "A";
-  const teamBLabel = state.project.teams.B.name ? `B：${state.project.teams.B.name}` : "B";
-  els.tagAServeTeamLabel.textContent = teamALabel;
-  els.tagAAttackTeamLabel.textContent = teamALabel;
-  els.tagBServeTeamLabel.textContent = teamBLabel;
-  els.tagBAttackTeamLabel.textContent = teamBLabel;
+  const layout = getCourtLayout();
+  const positions = {
+    topLeft: { button: els.tagTopLeftButton, label: els.tagTopLeftTeamLabel },
+    topRight: { button: els.tagTopRightButton, label: els.tagTopRightTeamLabel },
+    bottomLeft: { button: els.tagBottomLeftButton, label: els.tagBottomLeftTeamLabel },
+    bottomRight: { button: els.tagBottomRightButton, label: els.tagBottomRightTeamLabel }
+  };
+
+  Object.entries(layout).forEach(([position, item]) => {
+    const target = positions[position];
+    target.button.dataset.team = item.team;
+    target.button.dataset.play = item.play;
+    target.label.textContent = getTeamButtonLabel(item.team);
+  });
+}
+
+function getCourtLayout() {
+  if (state.courtChanged) {
+    return {
+      topLeft: { team: "A", play: "serve" },
+      topRight: { team: "A", play: "attack" },
+      bottomLeft: { team: "B", play: "serve" },
+      bottomRight: { team: "B", play: "attack" }
+    };
+  }
+
+  return {
+    topLeft: { team: "B", play: "serve" },
+    topRight: { team: "B", play: "attack" },
+    bottomLeft: { team: "A", play: "serve" },
+    bottomRight: { team: "A", play: "attack" }
+  };
+}
+
+function getTeamButtonLabel(team) {
+  const name = state.project.teams[team]?.name || "";
+  return name ? `${team}：${name}` : team;
 }
 
 function renderDriveSettings() {
@@ -573,8 +606,7 @@ function renderTagTable() {
       <td><input class="time-input" value="${formatTime(tag.time)}" aria-label="タグ時刻"></td>
       <td>
         <select class="team-input" aria-label="タグのチーム">
-          <option value=""${tag.team === "" ? " selected" : ""}>未選択</option>
-          <option value="A"${tag.team === "A" ? " selected" : ""}>A</option>
+          <option value="A"${tag.team !== "B" ? " selected" : ""}>A</option>
           <option value="B"${tag.team === "B" ? " selected" : ""}>B</option>
         </select>
       </td>
@@ -1025,8 +1057,12 @@ function bindEvents() {
     });
   });
 
-  [els.tagBServeButton, els.tagBAttackButton, els.tagAServeButton, els.tagAAttackButton].forEach((button) => {
+  [els.tagTopLeftButton, els.tagTopRightButton, els.tagBottomLeftButton, els.tagBottomRightButton].forEach((button) => {
     button.addEventListener("click", () => addTag(button.dataset.team, button.dataset.play));
+  });
+  els.courtChangeButton.addEventListener("click", () => {
+    state.courtChanged = !state.courtChanged;
+    renderTagButtonLabels();
   });
   els.beforeHandle.addEventListener("pointerdown", (event) => startRangeDrag("before", event));
   els.afterHandle.addEventListener("pointerdown", (event) => startRangeDrag("after", event));

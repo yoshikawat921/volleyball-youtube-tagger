@@ -525,8 +525,9 @@ td:nth-child(4) {
 .tag-actions {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 0.75rem;
-  margin-top: 0.45rem;
+  column-gap: 0.75rem;
+  row-gap: 0.55rem;
+  margin-top: 0;
 }
 
 .tag-actions button {
@@ -561,12 +562,21 @@ td:nth-child(4) {
   background: #7f2f16;
 }
 
-.tagging-hint {
-  color: var(--muted);
-  font-size: 0.92rem;
-  font-weight: 800;
-  margin: 0;
-  text-align: left;
+.tag-actions .court-change-button {
+  background: #dceee2;
+  color: var(--accent-dark);
+  font-size: 0.82rem;
+  grid-column: 1 / -1;
+  justify-self: center;
+  line-height: 1;
+  min-height: 38px;
+  min-width: 8.6rem;
+  padding: 0.6rem 0.8rem;
+  width: min(11rem, 62%);
+}
+
+.tag-actions .court-change-button:hover {
+  background: #cfe6d7;
 }
 
 .replay-panel {
@@ -778,8 +788,9 @@ td:nth-child(4) {
   }
 
   .tag-actions {
-    gap: 0.65rem;
-    margin-top: 0.45rem;
+    column-gap: 0.65rem;
+    row-gap: 0.5rem;
+    margin-top: 0;
   }
 
   .filter-grid {
@@ -871,7 +882,8 @@ td:nth-child(4) {
   }
 
   .tag-actions {
-    gap: 0.6rem;
+    column-gap: 0.6rem;
+    row-gap: 0.45rem;
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
@@ -880,6 +892,14 @@ td:nth-child(4) {
     min-height: 70px;
     min-width: 0;
     padding-inline: 0.35rem;
+  }
+
+  .tag-actions .court-change-button {
+    font-size: 0.78rem;
+    min-height: 38px;
+    min-width: 7.6rem;
+    padding-inline: 0.55rem;
+    width: min(9.5rem, 68%);
   }
 
   .playback-controls {
