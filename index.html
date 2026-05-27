@@ -29,30 +29,22 @@
             <input id="projectNameInput" type="text" placeholder="動画読み込み後に自動取得" autocomplete="off" readonly>
           </label>
           <label>
-            チームA名
+            チームA名称（映像の手前側）
             <input id="teamANameInput" type="text" autocomplete="off">
           </label>
           <label>
-            チームB名
+            チームB名称（映像の奥側）
             <input id="teamBNameInput" type="text" autocomplete="off">
-          </label>
-          <label>
-            チームA 背番号
-            <input id="teamAJerseysInput" type="text" placeholder="1,2,3,4,5,6">
-          </label>
-          <label>
-            チームB 背番号
-            <input id="teamBJerseysInput" type="text" placeholder="1,2,3,4,5,6">
           </label>
         </div>
 
         <div class="button-row settings-actions">
           <button id="loadVideoButton" type="button">動画読み込み</button>
           <label class="file-button">
-            再開：JSON読み込み
+            ファイル読み込み
             <input id="importProjectInput" type="file" accept="application/json,.json">
           </label>
-          <button id="exportProjectButton" type="button" class="export-button">保存：JSON書き出し</button>
+          <button id="exportProjectButton" type="button" class="export-button">ファイル書き出し</button>
           <button id="resetProjectButton" type="button" class="reset-button">初期化</button>
         </div>
 
@@ -115,20 +107,24 @@
               <p>現在時刻: <strong id="currentTimeLabel">0:00.0</strong></p>
             </div>
 
-            <div class="tag-actions">
-              <button id="tagServeButton" type="button" class="serve-button">サーブをタグ</button>
-              <button id="tagSpikeButton" type="button" class="spike-button">アタックをタグ</button>
-            </div>
-
-            <div class="segmented-control" aria-label="チーム選択">
-              <button id="teamNoneButton" type="button" class="unset-button" data-team="">未選択</button>
-              <button id="teamAButton" type="button" data-team="A">チームA</button>
-              <button id="teamBButton" type="button" data-team="B">チームB</button>
-            </div>
-
-            <div>
-              <div class="mini-heading">背番号</div>
-              <div id="jerseyButtons" class="jersey-grid" aria-live="polite"></div>
+            <p class="tagging-hint">ボールヒットに合わせてタグ付け</p>
+            <div class="tag-actions tag-actions-grid">
+              <button id="tagBServeButton" type="button" class="serve-button" data-team="B" data-play="serve">
+                <span id="tagBServeTeamLabel">B</span>
+                <span>サーブをタグ</span>
+              </button>
+              <button id="tagBAttackButton" type="button" class="spike-button" data-team="B" data-play="attack">
+                <span id="tagBAttackTeamLabel">B</span>
+                <span>アタックをタグ</span>
+              </button>
+              <button id="tagAServeButton" type="button" class="serve-button" data-team="A" data-play="serve">
+                <span id="tagAServeTeamLabel">A</span>
+                <span>サーブをタグ</span>
+              </button>
+              <button id="tagAAttackButton" type="button" class="spike-button" data-team="A" data-play="attack">
+                <span id="tagAAttackTeamLabel">A</span>
+                <span>アタックをタグ</span>
+              </button>
             </div>
           </section>
         </div>
@@ -146,7 +142,6 @@
                     <th><button type="button" class="sort-button" data-sort-key="time">時刻</button></th>
                     <th><button type="button" class="sort-button" data-sort-key="team">チーム</button></th>
                     <th><button type="button" class="sort-button" data-sort-key="play">プレー</button></th>
-                    <th><button type="button" class="sort-button" data-sort-key="jerseyNumber">背番号</button></th>
                     <th><span class="sr-only">タグ操作</span></th>
                   </tr>
                 </thead>
@@ -158,7 +153,7 @@
           <section class="panel replay-panel" aria-labelledby="replayTitle">
             <div class="section-heading">
               <h2 id="replayTitle">絞り込み再生</h2>
-              <p>該当タグ <span id="filteredCountLabel">0</span> 件</p>
+              <p id="replaySummaryLabel">該当タグ 0 件</p>
             </div>
 
             <div class="filter-grid">
@@ -178,12 +173,6 @@
                   <option value="B">チームB</option>
                 </select>
               </label>
-              <label>
-                背番号
-                <select id="jerseyFilter">
-                  <option value="">すべて</option>
-                </select>
-              </label>
             </div>
 
             <div class="replay-window">
@@ -201,7 +190,6 @@
               <button id="nextReplayButton" type="button" class="secondary-button">次のプレー</button>
               <button id="stopReplayButton" type="button" class="secondary-button">再生終了</button>
             </div>
-            <p id="replayStatus" class="status-text">再生停止中</p>
           </section>
         </div>
       </section>
@@ -210,7 +198,7 @@
     <dialog id="resetConfirmDialog" class="confirm-dialog" aria-labelledby="resetConfirmTitle">
       <form method="dialog">
         <h2 id="resetConfirmTitle">初期化しますか？</h2>
-        <p>現在の入力内容とローカル保存データを初期化します。JSON書き出ししていないタグは失われます。</p>
+        <p>現在の入力内容とローカル保存データを初期化します。ファイル書き出ししていないタグは失われます。</p>
         <div class="dialog-actions">
           <button id="resetCancelButton" type="submit" value="cancel" class="secondary-button" autofocus>キャンセル</button>
           <button type="submit" value="reset" class="reset-button">初期化する</button>
@@ -219,6 +207,6 @@
     </dialog>
 
     <script src="https://www.youtube.com/iframe_api"></script>
-    <script src="app.js?v=20260527-4"></script>
+    <script src="app.js?v=20260527-5"></script>
   </body>
 </html>

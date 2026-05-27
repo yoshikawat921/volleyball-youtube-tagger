@@ -1,7 +1,5 @@
 const STORAGE_KEY = "volleyball-youtube-tagger-project-v1";
 const DRIVE_SYNC_KEY = "volleyball-youtube-tagger-drive-sync-v1";
-const DEFAULT_LEGACY_JERSEY = 1;
-const LEGACY_DEFAULT_JERSEYS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
 const RANGE_MIN = -5;
 const RANGE_MAX = 5;
 const DRIVE_SAVE_DELAY_MS = 2500;
@@ -13,8 +11,8 @@ const defaultProject = {
   projectName: "",
   youtubeVideoId: "",
   teams: {
-    A: { name: "", jerseyNumbers: [] },
-    B: { name: "", jerseyNumbers: [] }
+    A: { name: "" },
+    B: { name: "" }
   },
   tags: []
 };
@@ -29,10 +27,7 @@ const state = {
     timer: null,
     saving: false
   },
-  selectedTeam: "",
-  selectedJerseyNumber: null,
-  quickEditTagId: "",
-  filters: { play: "", team: "", jerseyNumber: "" },
+  filters: { play: "", team: "" },
   tableSort: { key: "time", direction: "asc" },
   preRoll: 3,
   postRoll: 3,
@@ -41,6 +36,7 @@ const state = {
   recentlyAddedTagId: "",
   recentlyAddedTimer: null,
   activeReplayTagId: "",
+  replayStatusText: "再生停止中",
   replay: { active: false, tags: [], index: 0, clipEnd: 0, timer: null }
 };
 
@@ -49,8 +45,6 @@ const els = {
   youtubeInput: document.querySelector("#youtubeInput"),
   teamANameInput: document.querySelector("#teamANameInput"),
   teamBNameInput: document.querySelector("#teamBNameInput"),
-  teamAJerseysInput: document.querySelector("#teamAJerseysInput"),
-  teamBJerseysInput: document.querySelector("#teamBJerseysInput"),
   loadVideoButton: document.querySelector("#loadVideoButton"),
   exportProjectButton: document.querySelector("#exportProjectButton"),
   resetProjectButton: document.querySelector("#resetProjectButton"),
@@ -64,12 +58,14 @@ const els = {
   videoIdLabel: document.querySelector("#videoIdLabel"),
   currentTimeLabel: document.querySelector("#currentTimeLabel"),
   saveStatus: document.querySelector("#saveStatus"),
-  teamNoneButton: document.querySelector("#teamNoneButton"),
-  teamAButton: document.querySelector("#teamAButton"),
-  teamBButton: document.querySelector("#teamBButton"),
-  jerseyButtons: document.querySelector("#jerseyButtons"),
-  tagServeButton: document.querySelector("#tagServeButton"),
-  tagSpikeButton: document.querySelector("#tagSpikeButton"),
+  tagAServeButton: document.querySelector("#tagAServeButton"),
+  tagAAttackButton: document.querySelector("#tagAAttackButton"),
+  tagBServeButton: document.querySelector("#tagBServeButton"),
+  tagBAttackButton: document.querySelector("#tagBAttackButton"),
+  tagAServeTeamLabel: document.querySelector("#tagAServeTeamLabel"),
+  tagAAttackTeamLabel: document.querySelector("#tagAAttackTeamLabel"),
+  tagBServeTeamLabel: document.querySelector("#tagBServeTeamLabel"),
+  tagBAttackTeamLabel: document.querySelector("#tagBAttackTeamLabel"),
   playPauseButton: document.querySelector("#playPauseButton"),
   seekBack1Button: document.querySelector("#seekBack1Button"),
   seekForward1Button: document.querySelector("#seekForward1Button"),
@@ -79,17 +75,15 @@ const els = {
   seekForward30Button: document.querySelector("#seekForward30Button"),
   playFilter: document.querySelector("#playFilter"),
   teamFilter: document.querySelector("#teamFilter"),
-  jerseyFilter: document.querySelector("#jerseyFilter"),
   replayRangeSlider: document.querySelector("#replayRangeSlider"),
   replayRangeFill: document.querySelector("#replayRangeFill"),
   beforeHandle: document.querySelector("#beforeHandle"),
   afterHandle: document.querySelector("#afterHandle"),
-  filteredCountLabel: document.querySelector("#filteredCountLabel"),
+  replaySummaryLabel: document.querySelector("#replaySummaryLabel"),
   playFilteredButton: document.querySelector("#playFilteredButton"),
   previousReplayButton: document.querySelector("#previousReplayButton"),
   nextReplayButton: document.querySelector("#nextReplayButton"),
   stopReplayButton: document.querySelector("#stopReplayButton"),
-  replayStatus: document.querySelector("#replayStatus"),
   totalTagsLabel: document.querySelector("#totalTagsLabel"),
   tagTableScroll: document.querySelector("#tagTableScroll"),
   tagTableBody: document.querySelector("#tagTableBody"),
@@ -139,12 +133,10 @@ function normalizeProject(project) {
     youtubeVideoId: project.youtubeVideoId || "",
     teams: {
       A: {
-        name: normalizeTeamName(project.teams?.A?.name, "A"),
-        jerseyNumbers: normalizeJerseyNumbers(project.teams?.A?.jerseyNumbers || [])
+        name: normalizeTeamName(project.teams?.A?.name, "A")
       },
       B: {
-        name: normalizeTeamName(project.teams?.B?.name, "B"),
-        jerseyNumbers: normalizeJerseyNumbers(project.teams?.B?.jerseyNumbers || [])
+        name: normalizeTeamName(project.teams?.B?.name, "B")
       }
     },
     tags: (project.tags || [])
@@ -153,39 +145,18 @@ function normalizeProject(project) {
       .map((tag) => {
         const team = tag.team === "A" || tag.team === "B" ? tag.team : "";
         const play = tag.play;
-        const jerseyNumber = normalizeJerseyNumber(tag.jerseyNumber);
         return {
           id: tag.id || createId(),
           youtubeVideoId: tag.youtubeVideoId || project.youtubeVideoId || "",
           time: clamp(Number(tag.time) || 0, 0, Number.MAX_SAFE_INTEGER),
           team,
           play,
-          jerseyNumber,
-          label: makeLabel(team, play, jerseyNumber)
+          label: makeLabel(team, play)
         };
       })
   };
 
-  if (isLegacyEmptyInitialProject(normalized)) {
-    normalized.teams.A.jerseyNumbers = [];
-    normalized.teams.B.jerseyNumbers = [];
-  }
-
   return normalized;
-}
-
-function isLegacyEmptyInitialProject(project) {
-  return !project.projectName
-    && !project.youtubeVideoId
-    && !project.tags.length
-    && !project.teams.A.name
-    && !project.teams.B.name
-    && sameNumberList(project.teams.A.jerseyNumbers, LEGACY_DEFAULT_JERSEYS)
-    && sameNumberList(project.teams.B.jerseyNumbers, LEGACY_DEFAULT_JERSEYS);
-}
-
-function sameNumberList(left, right) {
-  return left.length === right.length && left.every((number, index) => number === right[index]);
 }
 
 function normalizeLegacySceneProject(project) {
@@ -194,8 +165,8 @@ function normalizeLegacySceneProject(project) {
     projectName: normalizeProjectName(project.title || project.projectName),
     youtubeVideoId: project.youtubeVideoId || "",
     teams: {
-      A: { name: "", jerseyNumbers: [] },
-      B: { name: "", jerseyNumbers: [] }
+      A: { name: "" },
+      B: { name: "" }
     },
     tags: (project.scenes || [])
       .map((scene) => {
@@ -207,8 +178,7 @@ function normalizeLegacySceneProject(project) {
           time: clamp(Number(scene.startSeconds) || 0, 0, Number.MAX_SAFE_INTEGER),
           team: "A",
           play,
-          jerseyNumber: DEFAULT_LEGACY_JERSEY,
-          label: makeLabel("A", play, DEFAULT_LEGACY_JERSEY)
+          label: makeLabel("A", play)
         };
       })
   };
@@ -216,7 +186,7 @@ function normalizeLegacySceneProject(project) {
 
 function normalizeProjectName(value) {
   const name = String(value || "").trim();
-  if (!name || name === "Untitled Volleyball Project" || name === "無題のバレーボールプロジェクト") return "";
+  if (!name || name === "Untitled Volleyball Project" || name === "無題のバレーボールプロジェクト" || name === "動画タイトル取得中") return "";
   return name;
 }
 
@@ -226,26 +196,11 @@ function normalizeTeamName(value, team) {
   return name;
 }
 
-function normalizeJerseyNumbers(value) {
-  const list = Array.isArray(value) ? value : parseJerseyNumbers(value);
-  return [...new Set(list.map(Number).filter((number) => Number.isInteger(number) && number >= 0))]
-    .sort((a, b) => a - b);
-}
-
 function normalizePlay(value) {
   const play = String(value || "").trim().toLowerCase();
   if (play === "serve" || play === "サーブ") return "serve";
   if (play === "attack" || play === "spike" || play === "アタック" || play === "スパイク") return "attack";
   return "";
-}
-
-function parseJerseyNumbers(value) {
-  return String(value)
-    .split(/[\s,]+/)
-    .map((entry) => entry.trim())
-    .filter((entry) => entry !== "")
-    .map((entry) => Number(entry))
-    .filter((number) => Number.isInteger(number) && number >= 0);
 }
 
 function createId() {
@@ -260,14 +215,8 @@ function ensureProjectId() {
   return state.project.projectId;
 }
 
-function makeLabel(team, play, jerseyNumber) {
-  return `${team || "none"}_${play}_${jerseyNumber ?? "none"}`;
-}
-
-function normalizeJerseyNumber(value) {
-  if (value === "" || value === null || value === undefined) return null;
-  const number = Number(value);
-  return Number.isInteger(number) && number >= 0 ? number : null;
+function makeLabel(team, play) {
+  return `${team || "none"}_${play}`;
 }
 
 function formatTime(seconds) {
@@ -340,18 +289,10 @@ function applySettingsFromInputs() {
   state.project.youtubeVideoId = videoId;
   state.project.teams.A.name = els.teamANameInput.value.trim();
   state.project.teams.B.name = els.teamBNameInput.value.trim();
-  state.project.teams.A.jerseyNumbers = normalizeJerseyNumbers(els.teamAJerseysInput.value);
-  state.project.teams.B.jerseyNumbers = normalizeJerseyNumbers(els.teamBJerseysInput.value);
   state.project.tags.forEach((tag) => {
     tag.youtubeVideoId = videoId;
-    tag.label = makeLabel(tag.team, tag.play, tag.jerseyNumber);
+    tag.label = makeLabel(tag.team, tag.play);
   });
-
-  if (!state.selectedTeam) {
-    state.selectedJerseyNumber = null;
-  } else if (!state.project.teams[state.selectedTeam].jerseyNumbers.includes(state.selectedJerseyNumber)) {
-    state.selectedJerseyNumber = null;
-  }
 
   if (videoChanged) {
     loadVideo();
@@ -369,7 +310,9 @@ function loadVideo() {
     return;
   }
   state.project.youtubeVideoId = videoId;
-  state.project.projectName = "動画タイトル取得中";
+  if (state.project.projectName === "動画タイトル取得中") {
+    state.project.projectName = "";
+  }
   state.project.tags.forEach((tag) => {
     tag.youtubeVideoId = videoId;
   });
@@ -396,7 +339,7 @@ function updateVideoTitleFromPlayer() {
   renderSettings();
 }
 
-function addTag(play, team = "") {
+function addTag(team, play) {
   if (!state.project.youtubeVideoId) {
     alert("タグを追加する前にYouTube動画を読み込んでください。");
     return;
@@ -407,12 +350,10 @@ function addTag(play, team = "") {
     time: Number(getCurrentTime().toFixed(2)),
     team,
     play,
-    jerseyNumber: null,
-    label: makeLabel(team, play, null)
+    label: makeLabel(team, play)
   };
 
   state.project.tags.push(tag);
-  state.quickEditTagId = tag.id;
   markRecentlyAddedTag(tag.id);
   saveProject();
   render();
@@ -450,15 +391,7 @@ function compareTagsByKey(a, b, key) {
   if (key === "time") return a.time - b.time;
   if (key === "team") return (a.team || "").localeCompare(b.team || "");
   if (key === "play") return playSortValue(a.play).localeCompare(playSortValue(b.play));
-  if (key === "jerseyNumber") return compareJerseyNumbers(a.jerseyNumber, b.jerseyNumber);
   return a.time - b.time;
-}
-
-function compareJerseyNumbers(a, b) {
-  if (a === null && b === null) return 0;
-  if (a === null) return -1;
-  if (b === null) return 1;
-  return Number(a) - Number(b);
 }
 
 function playSortValue(play) {
@@ -469,8 +402,7 @@ function filteredTags() {
   return sortedTags().filter((tag) => {
     const playMatch = !state.filters.play || tag.play === state.filters.play;
     const teamMatch = !state.filters.team || tag.team === state.filters.team;
-    const jerseyMatch = !state.filters.jerseyNumber || Number(tag.jerseyNumber) === Number(state.filters.jerseyNumber);
-    return playMatch && teamMatch && jerseyMatch;
+    return playMatch && teamMatch;
   });
 }
 
@@ -479,53 +411,16 @@ function updateTag(id, updates) {
   if (!tag) return;
   Object.assign(tag, updates);
   tag.team = tag.team === "A" || tag.team === "B" ? tag.team : "";
-  tag.jerseyNumber = normalizeJerseyNumber(tag.jerseyNumber);
-  if (!tag.team) {
-    tag.jerseyNumber = null;
-  } else {
-    const teamJerseys = state.project.teams[tag.team].jerseyNumbers;
-    if (tag.jerseyNumber !== null && !teamJerseys.includes(tag.jerseyNumber)) {
-      tag.jerseyNumber = null;
-    }
-  }
   tag.time = clamp(Number(tag.time) || 0, 0, Number.MAX_SAFE_INTEGER);
-  tag.label = makeLabel(tag.team, tag.play, tag.jerseyNumber);
+  tag.label = makeLabel(tag.team, tag.play);
   saveProject();
   render();
 }
 
 function deleteTag(id) {
   state.project.tags = state.project.tags.filter((tag) => tag.id !== id);
-  if (state.quickEditTagId === id) state.quickEditTagId = "";
   saveProject();
   render();
-}
-
-function buildJerseyOptions(selectedValue = "") {
-  const numbers = new Set();
-  Object.values(state.project.teams).forEach((team) => {
-    team.jerseyNumbers.forEach((number) => numbers.add(number));
-  });
-
-  return ["", ...[...numbers].sort((a, b) => a - b)]
-    .map((number) => {
-      const label = number === "" ? "すべて" : `#${number}`;
-      const selected = String(number) === String(selectedValue) ? " selected" : "";
-      return `<option value="${number}"${selected}>${label}</option>`;
-    })
-    .join("");
-}
-
-function buildTagJerseyOptions(tag) {
-  const selectedValue = tag.jerseyNumber ?? "";
-  const numbers = tag.team ? state.project.teams[tag.team].jerseyNumbers : [];
-  return ["", ...numbers]
-    .map((number) => {
-      const label = number === "" ? "未入力" : String(number);
-      const selected = String(number) === String(selectedValue) ? " selected" : "";
-      return `<option value="${number}"${selected}>${label}</option>`;
-    })
-    .join("");
 }
 
 function renderSettings() {
@@ -534,14 +429,20 @@ function renderSettings() {
   els.youtubeInput.value = state.project.youtubeVideoId;
   els.teamANameInput.value = state.project.teams.A.name;
   els.teamBNameInput.value = state.project.teams.B.name;
-  els.teamAJerseysInput.value = state.project.teams.A.jerseyNumbers.join(", ");
-  els.teamBJerseysInput.value = state.project.teams.B.jerseyNumbers.join(", ");
   els.videoIdLabel.textContent = state.project.youtubeVideoId ? `動画ID: ${state.project.youtubeVideoId}` : "動画未読み込み";
-  els.teamAButton.textContent = state.project.teams.A.name ? `A: ${state.project.teams.A.name}` : "A";
-  els.teamBButton.textContent = state.project.teams.B.name ? `B: ${state.project.teams.B.name}` : "B";
+  renderTagButtonLabels();
   els.teamFilter.options[1].textContent = state.project.teams.A.name ? `A: ${state.project.teams.A.name}` : "A";
   els.teamFilter.options[2].textContent = state.project.teams.B.name ? `B: ${state.project.teams.B.name}` : "B";
   renderDriveSettings();
+}
+
+function renderTagButtonLabels() {
+  const teamALabel = state.project.teams.A.name ? `A：${state.project.teams.A.name}` : "A";
+  const teamBLabel = state.project.teams.B.name ? `B：${state.project.teams.B.name}` : "B";
+  els.tagAServeTeamLabel.textContent = teamALabel;
+  els.tagAAttackTeamLabel.textContent = teamALabel;
+  els.tagBServeTeamLabel.textContent = teamBLabel;
+  els.tagBAttackTeamLabel.textContent = teamBLabel;
 }
 
 function renderDriveSettings() {
@@ -566,64 +467,6 @@ function renderDriveStatus(message) {
     statusMessage = "Drive自動保存は有効です";
   }
   if (els.driveSummaryStatus) els.driveSummaryStatus.textContent = statusMessage;
-}
-
-function renderTeamAndJerseys() {
-  const tag = getQuickEditTag();
-  const team = tag?.team || "";
-  const jerseyNumber = tag?.jerseyNumber ?? null;
-  const hasTag = Boolean(tag);
-
-  [els.teamNoneButton, els.teamAButton, els.teamBButton].forEach((button) => {
-    button.disabled = !hasTag;
-  });
-  els.teamNoneButton.classList.toggle("active", hasTag && !team);
-  els.teamAButton.classList.toggle("active", team === "A");
-  els.teamBButton.classList.toggle("active", team === "B");
-  els.jerseyButtons.innerHTML = "";
-
-  const noneButton = document.createElement("button");
-  noneButton.type = "button";
-  noneButton.textContent = "未選択";
-  noneButton.className = "unset-button";
-  noneButton.disabled = !hasTag || !team;
-  noneButton.classList.toggle("active", hasTag && jerseyNumber === null);
-  noneButton.addEventListener("click", () => {
-    updateQuickEditTag({ jerseyNumber: null });
-    renderTeamAndJerseys();
-  });
-  els.jerseyButtons.append(noneButton);
-
-  if (!hasTag || !team) {
-    return;
-  }
-
-  const jerseys = state.project.teams[team].jerseyNumbers;
-  if (!jerseys.length) {
-    return;
-  }
-
-  jerseys.forEach((number) => {
-    const button = document.createElement("button");
-    button.type = "button";
-    button.textContent = number;
-    button.classList.toggle("active", number === jerseyNumber);
-    button.addEventListener("click", () => {
-      updateQuickEditTag({ jerseyNumber: number });
-      renderTeamAndJerseys();
-    });
-    els.jerseyButtons.append(button);
-  });
-}
-
-function getQuickEditTag() {
-  return state.project.tags.find((tag) => tag.id === state.quickEditTagId) || null;
-}
-
-function updateQuickEditTag(updates) {
-  const tag = getQuickEditTag();
-  if (!tag) return;
-  updateTag(tag.id, updates);
 }
 
 function renderReplayWindow() {
@@ -702,9 +545,14 @@ function handleRangeKeydown(handleType, event) {
 function renderFilters() {
   els.playFilter.value = state.filters.play;
   els.teamFilter.value = state.filters.team;
-  els.jerseyFilter.innerHTML = buildJerseyOptions(state.filters.jerseyNumber);
-  els.filteredCountLabel.textContent = String(filteredTags().length);
   els.totalTagsLabel.textContent = String(state.project.tags.length);
+  renderReplaySummary();
+}
+
+function renderReplaySummary() {
+  const count = filteredTags().length;
+  const status = state.replayStatusText ? `（${state.replayStatusText}） ` : "";
+  els.replaySummaryLabel.textContent = `${status}該当タグ ${count} 件`;
 }
 
 function renderTagTable() {
@@ -737,11 +585,6 @@ function renderTagTable() {
         </select>
       </td>
       <td>
-        <select class="jersey-input" aria-label="背番号" ${tag.team ? "" : "disabled"}>
-          ${buildTagJerseyOptions(tag)}
-        </select>
-      </td>
-      <td>
         <div class="action-buttons">
           <button type="button" data-action="seek" class="table-play-button">再生</button>
           <button type="button" data-action="delete" class="table-delete-button">削除</button>
@@ -753,13 +596,10 @@ function renderTagTable() {
       updateTag(tag.id, { time: Number(parseTime(event.target.value).toFixed(2)) });
     });
     row.querySelector(".team-input").addEventListener("change", (event) => {
-      updateTag(tag.id, { team: event.target.value, jerseyNumber: null });
+      updateTag(tag.id, { team: event.target.value });
     });
     row.querySelector(".play-input").addEventListener("change", (event) => {
       updateTag(tag.id, { play: event.target.value });
-    });
-    row.querySelector(".jersey-input").addEventListener("change", (event) => {
-      updateTag(tag.id, { jerseyNumber: event.target.value });
     });
     row.querySelector('[data-action="seek"]').addEventListener("click", () => {
       playClip(tag);
@@ -821,7 +661,6 @@ function setTableSort(key) {
 
 function render() {
   renderSettings();
-  renderTeamAndJerseys();
   renderReplayWindow();
   renderFilters();
   renderTagTable();
@@ -871,7 +710,7 @@ function playReplayIndex(index) {
   state.replay.tags = tags;
   state.replay.index = safeIndex;
   const tag = tags[safeIndex];
-  setReplayStatus(`再生中 ${safeIndex + 1} / ${tags.length}: ${tag.label}`);
+  setReplayStatus(`再生中 ${safeIndex + 1} / ${tags.length}`);
   focusTagRow(tag.id);
   playClip(tag, true);
   clearReplayTimer();
@@ -917,7 +756,8 @@ function clearReplayTimer() {
 }
 
 function setReplayStatus(message) {
-  els.replayStatus.textContent = message;
+  state.replayStatusText = message;
+  renderReplaySummary();
 }
 
 function setStatus(message) {
@@ -963,7 +803,7 @@ function scheduleDriveSave() {
   renderDriveStatus("Drive自動保存待機中...");
   state.driveSync.timer = setTimeout(() => {
     saveProjectToDrive().catch(() => {
-      renderDriveStatus("Drive保存に失敗しました。JSON書き出しでバックアップしてください。");
+      renderDriveStatus("Drive保存に失敗しました。ファイル書き出しでバックアップしてください。");
     });
   }, DRIVE_SAVE_DELAY_MS);
 }
@@ -1058,10 +898,7 @@ async function resetProject() {
   localStorage.removeItem(STORAGE_KEY);
   state.project = JSON.parse(JSON.stringify(defaultProject));
   ensureProjectId();
-  state.selectedTeam = "";
-  state.selectedJerseyNumber = null;
-  state.quickEditTagId = "";
-  state.filters = { play: "", team: "", jerseyNumber: "" };
+  state.filters = { play: "", team: "" };
   state.recentlyAddedTagId = "";
   if (state.recentlyAddedTimer) {
     clearTimeout(state.recentlyAddedTimer);
@@ -1069,7 +906,6 @@ async function resetProject() {
   }
   els.playFilter.value = "";
   els.teamFilter.value = "";
-  els.jerseyFilter.value = "";
   if (state.playerReady) {
     state.player.stopVideo();
   }
@@ -1079,7 +915,7 @@ async function resetProject() {
 
 function confirmProjectReset() {
   if (!els.resetConfirmDialog || typeof els.resetConfirmDialog.showModal !== "function") {
-    return Promise.resolve(confirm("現在の入力内容とローカル保存データを初期化します。JSON書き出ししていないタグは失われます。初期化しますか？"));
+    return Promise.resolve(confirm("現在の入力内容とローカル保存データを初期化します。ファイル書き出ししていないタグは失われます。初期化しますか？"));
   }
 
   return new Promise((resolve) => {
@@ -1159,10 +995,7 @@ async function importProject(file) {
   if (!file) return;
   const text = await file.text();
   state.project = normalizeProject(JSON.parse(text));
-  state.filters = { play: "", team: "", jerseyNumber: "" };
-  state.selectedTeam = "";
-  state.selectedJerseyNumber = null;
-  state.quickEditTagId = "";
+  state.filters = { play: "", team: "" };
   stopReplay("再生停止中");
   cueCurrentVideo();
   scheduleVideoTitleSync();
@@ -1176,11 +1009,11 @@ function bindEvents() {
   els.exportProjectButton.addEventListener("click", exportProject);
   els.resetProjectButton.addEventListener("click", resetProject);
   els.importProjectInput.addEventListener("change", (event) => {
-    importProject(event.target.files[0]).catch(() => alert("このJSONファイルを読み込めませんでした。"));
+    importProject(event.target.files[0]).catch(() => alert("このファイルを読み込めませんでした。"));
     event.target.value = "";
   });
 
-  [els.teamANameInput, els.teamBNameInput, els.teamAJerseysInput, els.teamBJerseysInput].forEach((input) => {
+  [els.teamANameInput, els.teamBNameInput].forEach((input) => {
     input.addEventListener("change", applySettingsFromInputs);
   });
   [els.driveAutoSaveEnabled, els.driveWebAppUrlInput, els.driveFolderIdInput, els.driveSecretInput].forEach((input) => {
@@ -1192,11 +1025,9 @@ function bindEvents() {
     });
   });
 
-  els.teamAButton.addEventListener("click", () => selectTeam("A"));
-  els.teamBButton.addEventListener("click", () => selectTeam("B"));
-  els.teamNoneButton.addEventListener("click", () => selectTeam(""));
-  els.tagServeButton.addEventListener("click", () => addTag("serve"));
-  els.tagSpikeButton.addEventListener("click", () => addTag("attack"));
+  [els.tagBServeButton, els.tagBAttackButton, els.tagAServeButton, els.tagAAttackButton].forEach((button) => {
+    button.addEventListener("click", () => addTag(button.dataset.team, button.dataset.play));
+  });
   els.beforeHandle.addEventListener("pointerdown", (event) => startRangeDrag("before", event));
   els.afterHandle.addEventListener("pointerdown", (event) => startRangeDrag("after", event));
   els.beforeHandle.addEventListener("click", (event) => event.stopPropagation());
@@ -1224,20 +1055,11 @@ function bindEvents() {
     state.filters.team = event.target.value;
     renderFilters();
   });
-  els.jerseyFilter.addEventListener("change", (event) => {
-    state.filters.jerseyNumber = event.target.value;
-    renderFilters();
-  });
-
   els.playFilteredButton.addEventListener("click", playFilteredClips);
   els.previousReplayButton.addEventListener("click", () => moveReplayBy(-1));
   els.nextReplayButton.addEventListener("click", () => moveReplayBy(1));
   els.stopReplayButton.addEventListener("click", () => stopReplay());
   document.addEventListener("keydown", handleKeyboardShortcuts);
-}
-
-function selectTeam(team) {
-  updateQuickEditTag({ team, jerseyNumber: null });
 }
 
 function handleKeyboardShortcuts(event) {
@@ -1257,15 +1079,6 @@ function handleKeyboardShortcuts(event) {
     event.preventDefault();
     seekBy(event.shiftKey ? 5 : 1);
   }
-  const shortcut = event.key.toLowerCase();
-  if (shortcut === "z") {
-    event.preventDefault();
-    addTag("serve");
-  }
-  if (shortcut === "x") {
-    event.preventDefault();
-    addTag("attack");
-  }
 }
 
 function tickCurrentTime() {
@@ -1276,7 +1089,6 @@ function tickCurrentTime() {
 loadFromLocalStorage();
 loadDriveSettings();
 ensureProjectId();
-state.selectedJerseyNumber = null;
 bindEvents();
 render();
 tickCurrentTime();
