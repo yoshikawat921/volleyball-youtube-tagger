@@ -62,6 +62,10 @@ button:hover {
   background: var(--accent-dark);
 }
 
+button:active {
+  background: var(--accent-dark);
+}
+
 button:focus-visible,
 input:focus-visible,
 select:focus-visible,
@@ -180,7 +184,7 @@ th {
 .sort-button:hover,
 .sort-button.active {
   background: transparent;
-  color: var(--accent-dark);
+  color: var(--muted);
 }
 
 td input,
@@ -370,15 +374,6 @@ td:nth-child(4) {
   width: 1.25rem;
 }
 
-.drive-sync-actions {
-  align-items: center;
-  margin-top: 0.85rem;
-}
-
-.drive-sync-actions .status-text {
-  flex: 1 1 14rem;
-}
-
 .panel {
   background: var(--panel);
   border: 1px solid var(--line);
@@ -482,17 +477,24 @@ td:nth-child(4) {
 }
 
 .skip-button:hover {
-  background: #e0e0e0;
+  background: var(--accent-dark);
+}
+
+.skip-button:active {
+  background: var(--accent-dark);
 }
 
 .play-pause-button {
   background: var(--accent);
-  border: 2px solid var(--green-mid);
   color: var(--ink);
   gap: 0.35rem;
 }
 
 .play-pause-button:hover {
+  background: var(--accent-dark);
+}
+
+.play-pause-button:active {
   background: var(--accent-dark);
 }
 
@@ -535,7 +537,16 @@ td:nth-child(4) {
 #playFilteredButton:hover,
 .file-button:hover,
 .export-button:hover {
-  background: #e0e0e0;
+  background: var(--accent-dark);
+}
+
+.secondary-button:active,
+.table-delete-button:active,
+#loadVideoButton:active,
+#playFilteredButton:active,
+.file-button:active,
+.export-button:active {
+  background: var(--accent-dark);
 }
 
 .danger-button {
@@ -547,13 +558,21 @@ td:nth-child(4) {
   background: var(--accent-dark);
 }
 
+.danger-button:active {
+  background: var(--accent-dark);
+}
+
 .reset-button {
   background: var(--sepia-soft);
   color: var(--ink);
 }
 
 .reset-button:hover {
-  background: #e0e0e0;
+  background: var(--accent-dark);
+}
+
+.reset-button:active {
+  background: var(--accent-dark);
 }
 
 .file-button input {
@@ -579,6 +598,7 @@ td:nth-child(4) {
   line-height: 1.2;
   min-height: 74px;
   padding-block: 0.75rem;
+  transition: box-shadow 120ms ease, filter 120ms ease, transform 120ms ease;
 }
 
 .tag-actions button span:first-child {
@@ -624,6 +644,13 @@ td:nth-child(4) {
   filter: brightness(0.94);
 }
 
+.tag-actions .serve-button.tag-pressed,
+.tag-actions .spike-button.tag-pressed {
+  box-shadow: 0 0 0 5px var(--green-mid), 0 8px 18px rgba(0, 0, 0, 0.22);
+  filter: brightness(1.12);
+  transform: scale(0.96);
+}
+
 .tag-actions .court-change-button {
   background: var(--sepia-soft);
   color: var(--ink);
@@ -638,7 +665,11 @@ td:nth-child(4) {
 }
 
 .tag-actions .court-change-button:hover {
-  background: #e0e0e0;
+  background: var(--accent-dark);
+}
+
+.tag-actions .court-change-button:active {
+  background: var(--accent-dark);
 }
 
 .replay-panel {
@@ -783,6 +814,10 @@ td:nth-child(4) {
 }
 
 .table-play-button:hover {
+  background: var(--accent-dark);
+}
+
+.table-play-button:active {
   background: var(--accent-dark);
 }
 

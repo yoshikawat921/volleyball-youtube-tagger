@@ -30,7 +30,7 @@ const state = {
     saving: false
   },
   filters: { play: "", team: "" },
-  tableSort: { key: "time", direction: "asc" },
+  tableSort: { key: "time", direction: "desc" },
   preRoll: 3,
   postRoll: 3,
   player: null,
@@ -58,7 +58,6 @@ const els = {
   driveWebAppUrlInput: document.querySelector("#driveWebAppUrlInput"),
   driveFolderIdInput: document.querySelector("#driveFolderIdInput"),
   driveSecretInput: document.querySelector("#driveSecretInput"),
-  driveSaveNowButton: document.querySelector("#driveSaveNowButton"),
   driveSummaryStatus: document.querySelector("#driveSummaryStatus"),
   videoIdLabel: document.querySelector("#videoIdLabel"),
   currentTimeLabel: document.querySelector("#currentTimeLabel"),
@@ -358,7 +357,7 @@ function updateVideoTitleFromPlayer() {
 function addTag(team, play) {
   if (!state.project.youtubeVideoId) {
     alert("タグを追加する前にYouTube動画を読み込んでください。");
-    return;
+    return false;
   }
   const tag = {
     id: createId(),
@@ -374,6 +373,15 @@ function addTag(team, play) {
   saveProject();
   render();
   scrollTagRowIntoView(tag.id);
+  return true;
+}
+
+function showQuickTagFeedback(button) {
+  button.classList.remove("tag-pressed");
+  requestAnimationFrame(() => {
+    button.classList.add("tag-pressed");
+    setTimeout(() => button.classList.remove("tag-pressed"), 220);
+  });
 }
 
 function markRecentlyAddedTag(tagId) {
@@ -854,14 +862,18 @@ function readDriveSettingsFromInputs(schedule = true) {
   state.driveSync.webAppUrl = els.driveWebAppUrlInput.value.trim();
   state.driveSync.folderId = els.driveFolderIdInput.value.trim();
   state.driveSync.secret = els.driveSecretInput.value;
+  saveDriveSettings();
+  renderDriveStatus();
+  if (schedule && state.driveSync.enabled) scheduleDriveSave();
+}
+
+function saveDriveSettings() {
   localStorage.setItem(DRIVE_SYNC_KEY, JSON.stringify({
     enabled: state.driveSync.enabled,
     webAppUrl: state.driveSync.webAppUrl,
     folderId: state.driveSync.folderId,
     secret: state.driveSync.secret
   }));
-  renderDriveStatus();
-  if (schedule && state.driveSync.enabled) scheduleDriveSave();
 }
 
 function hasDriveSyncSettings() {
@@ -977,6 +989,15 @@ async function resetProject() {
   state.project = JSON.parse(JSON.stringify(defaultProject));
   ensureProjectId();
   state.filters = { play: "", team: "" };
+  state.driveSync.enabled = false;
+  state.driveSync.webAppUrl = els.driveWebAppUrlInput.value.trim();
+  state.driveSync.folderId = els.driveFolderIdInput.value.trim();
+  state.driveSync.secret = els.driveSecretInput.value;
+  if (state.driveSync.timer) {
+    clearTimeout(state.driveSync.timer);
+    state.driveSync.timer = null;
+  }
+  saveDriveSettings();
   state.recentlyAddedTagId = "";
   if (state.recentlyAddedTimer) {
     clearTimeout(state.recentlyAddedTimer);
@@ -1105,14 +1126,12 @@ function bindEvents() {
   [els.driveAutoSaveEnabled, els.driveWebAppUrlInput, els.driveFolderIdInput, els.driveSecretInput].forEach((input) => {
     input.addEventListener("change", () => readDriveSettingsFromInputs());
   });
-  els.driveSaveNowButton.addEventListener("click", () => {
-    saveProjectToDrive().catch(() => {
-      renderDriveStatus("失敗");
-    });
-  });
-
   [els.tagTopLeftButton, els.tagTopRightButton, els.tagBottomLeftButton, els.tagBottomRightButton].forEach((button) => {
-    button.addEventListener("click", () => addTag(button.dataset.team, button.dataset.play));
+    button.addEventListener("click", () => {
+      if (addTag(button.dataset.team, button.dataset.play)) {
+        showQuickTagFeedback(button);
+      }
+    });
   });
   els.courtChangeButton.addEventListener("click", () => {
     state.courtChanged = !state.courtChanged;
