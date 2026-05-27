@@ -1,18 +1,20 @@
 :root {
   color-scheme: light;
-  --bg: #f4f6f0;
+  --bg: #f8f4ee;
   --panel: #ffffff;
-  --ink: #17211d;
-  --muted: #66736c;
-  --line: #d9e1da;
-  --accent: #176f5d;
-  --accent-dark: #0f5548;
-  --accent-soft: #e6f3ee;
-  --serve: #145fa8;
-  --spike: #9c3b1c;
-  --danger: #a32626;
-  --focus: 0 0 0 3px rgba(23, 111, 93, 0.22);
-  --shadow: 0 16px 42px rgba(31, 51, 43, 0.1);
+  --ink: #1f1f1f;
+  --muted: #6f6f6f;
+  --line: #dedede;
+  --accent: #6f5b46;
+  --accent-dark: #4d3f31;
+  --accent-soft: #eee6dc;
+  --sepia-soft: #eee6dc;
+  --sepia-dark: #6f5b46;
+  --serve: #4a4a4a;
+  --spike: #4a4a4a;
+  --danger: #4d3f31;
+  --focus: 0 0 0 3px rgba(111, 91, 70, 0.22);
+  --shadow: 0 16px 42px rgba(0, 0, 0, 0.1);
 }
 
 * {
@@ -93,6 +95,12 @@ label {
   gap: 0.35rem;
 }
 
+.field-label {
+  color: var(--muted);
+  font-size: 0.86rem;
+  font-weight: 800;
+}
+
 input,
 select {
   border: 1px solid var(--line);
@@ -115,7 +123,7 @@ select {
 }
 
 .confirm-dialog::backdrop {
-  background: rgba(23, 33, 29, 0.36);
+  background: rgba(0, 0, 0, 0.36);
 }
 
 .confirm-dialog p {
@@ -255,6 +263,38 @@ td:nth-child(4) {
   flex: 0 0 auto;
 }
 
+.color-field {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.color-presets {
+  align-items: center;
+  display: grid;
+  gap: 0.45rem;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  min-height: 46px;
+}
+
+.color-swatch {
+  background: var(--swatch-color);
+  border: 2px solid var(--line);
+  border-radius: 999px;
+  min-height: 2.35rem;
+  min-width: 0;
+  padding: 0;
+  width: 100%;
+}
+
+.color-swatch:hover {
+  background: var(--swatch-color);
+}
+
+.color-swatch.selected {
+  border-color: var(--sepia-dark);
+  box-shadow: var(--focus);
+}
+
 .drive-sync-panel {
   border-top: 1px solid var(--line);
   margin-top: 1rem;
@@ -263,7 +303,7 @@ td:nth-child(4) {
 
 .drive-sync-panel summary {
   align-items: center;
-  color: var(--accent-dark);
+  color: var(--sepia-dark);
   cursor: pointer;
   display: flex;
   font-weight: 900;
@@ -406,7 +446,7 @@ td:nth-child(4) {
 
 .player-frame {
   aspect-ratio: 16 / 9;
-  background: #101513;
+  background: #111111;
   border-radius: 8px;
   overflow: hidden;
   position: relative;
@@ -436,12 +476,12 @@ td:nth-child(4) {
 }
 
 .skip-button {
-  background: #e8eee9;
+  background: var(--sepia-soft);
   color: var(--ink);
 }
 
 .skip-button:hover {
-  background: #dbe7df;
+  background: #e0e0e0;
 }
 
 .play-pause-button {
@@ -472,32 +512,22 @@ td:nth-child(4) {
 }
 
 .secondary-button,
-.table-delete-button {
-  background: #e8eee9;
+.table-delete-button,
+#loadVideoButton,
+#playFilteredButton,
+.file-button,
+.export-button {
+  background: var(--sepia-soft);
   color: var(--ink);
 }
 
 .secondary-button:hover,
-.table-delete-button:hover {
-  background: #dbe7df;
-}
-
-.file-button {
-  background: var(--serve);
-  color: #fff;
-}
-
-.file-button:hover {
-  background: #104d87;
-}
-
-.export-button {
-  background: var(--spike);
-  color: #fff;
-}
-
+.table-delete-button:hover,
+#loadVideoButton:hover,
+#playFilteredButton:hover,
+.file-button:hover,
 .export-button:hover {
-  background: #7f2f16;
+  background: #e0e0e0;
 }
 
 .danger-button {
@@ -505,16 +535,16 @@ td:nth-child(4) {
 }
 
 .danger-button:hover {
-  background: #7d1d1d;
+  background: #2f2f2f;
 }
 
 .reset-button {
-  background: #f2c94c;
+  background: var(--sepia-soft);
   color: var(--ink);
 }
 
 .reset-button:hover {
-  background: #ddb33a;
+  background: #e0e0e0;
 }
 
 .file-button input {
@@ -543,31 +573,50 @@ td:nth-child(4) {
 }
 
 .tag-actions button span:first-child {
-  font-size: 0.88rem;
+  font-size: 1.08rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tag-actions button span:last-child {
+  font-size: 0.82rem;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .serve-button {
-  background: var(--serve);
+  background: var(--sepia-dark);
 }
 
 .serve-button:hover {
-  background: #104d87;
+  background: var(--accent-dark);
 }
 
 .spike-button {
-  background: var(--spike);
+  background: var(--sepia-dark);
 }
 
 .spike-button:hover {
-  background: #7f2f16;
+  background: var(--accent-dark);
+}
+
+.tag-actions .serve-button,
+.tag-actions .spike-button {
+  background: var(--tag-team-color);
+  color: var(--tag-team-text);
+}
+
+.tag-actions .serve-button:hover,
+.tag-actions .spike-button:hover {
+  background: var(--tag-team-color);
+  filter: brightness(0.94);
 }
 
 .tag-actions .court-change-button {
-  background: #dceee2;
-  color: var(--accent-dark);
+  background: var(--sepia-soft);
+  color: var(--ink);
   font-size: 0.82rem;
   grid-column: 1 / -1;
   justify-self: center;
@@ -579,7 +628,7 @@ td:nth-child(4) {
 }
 
 .tag-actions .court-change-button:hover {
-  background: #cfe6d7;
+  background: #e0e0e0;
 }
 
 .replay-panel {
@@ -636,18 +685,18 @@ td:nth-child(4) {
 }
 
 .range-track {
-  background: #e8eee9;
+  background: var(--sepia-soft);
 }
 
 .range-fill {
-  background: var(--accent);
+  background: var(--sepia-dark);
   right: auto;
 }
 
 .range-handle {
   border: 2px solid #fff;
   border-radius: 999px;
-  box-shadow: 0 4px 12px rgba(31, 51, 43, 0.2);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
   font-size: 0.78rem;
   height: 2.55rem;
   min-height: 0;
@@ -684,23 +733,23 @@ td:nth-child(4) {
 }
 
 .active-replay-row td {
-  background: #fff7d6;
+  background: #f0f0f0;
 }
 
 .active-replay-row input,
 .active-replay-row select {
-  background: #fffdf3;
-  border-color: #e3c766;
+  background: #f7f7f7;
+  border-color: #bdbdbd;
 }
 
 .recently-added-row td {
-  background: #fdeaea;
+  background: var(--sepia-soft);
 }
 
 .recently-added-row input,
 .recently-added-row select {
-  background: #fff7f7;
-  border-color: #efb4b4;
+  background: #f8f8f8;
+  border-color: #bdbdbd;
 }
 
 .action-buttons {
@@ -717,7 +766,7 @@ td:nth-child(4) {
 }
 
 .table-play-button {
-  background: var(--accent);
+  background: var(--sepia-dark);
   color: #fff;
 }
 
@@ -727,9 +776,9 @@ td:nth-child(4) {
 
 .label-pill {
   background: var(--accent-soft);
-  border: 1px solid #c9e0d7;
+  border: 1px solid #d9cab7;
   border-radius: 999px;
-  color: var(--accent-dark);
+  color: var(--ink);
   display: inline-flex;
   font-size: 0.84rem;
   font-weight: 900;

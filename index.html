@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Volleyball Quick Tagger</title>
-    <link rel="stylesheet" href="style.css?v=20260527-3">
+    <link rel="stylesheet" href="style.css?v=20260527-8">
   </head>
   <body>
     <header class="app-header">
@@ -32,10 +32,36 @@
             チームA名称
             <input id="teamANameInput" type="text" autocomplete="off">
           </label>
+          <div class="color-field">
+            <span class="field-label">チームAカラー</span>
+            <div class="color-presets" aria-label="チームAカラー">
+              <button type="button" class="color-swatch" data-team-color="A" data-color="#145fa8" style="--swatch-color: #145fa8" aria-label="チームA 青"></button>
+              <button type="button" class="color-swatch" data-team-color="A" data-color="#9c3b1c" style="--swatch-color: #9c3b1c" aria-label="チームA 赤"></button>
+              <button type="button" class="color-swatch" data-team-color="A" data-color="#176f5d" style="--swatch-color: #176f5d" aria-label="チームA 緑"></button>
+              <button type="button" class="color-swatch" data-team-color="A" data-color="#f1c84b" style="--swatch-color: #f1c84b" aria-label="チームA 黄"></button>
+              <button type="button" class="color-swatch" data-team-color="A" data-color="#6f4aa8" style="--swatch-color: #6f4aa8" aria-label="チームA 紫"></button>
+              <button type="button" class="color-swatch" data-team-color="A" data-color="#e986aa" style="--swatch-color: #e986aa" aria-label="チームA 桃"></button>
+              <button type="button" class="color-swatch" data-team-color="A" data-color="#1f2623" style="--swatch-color: #1f2623" aria-label="チームA 黒"></button>
+              <button type="button" class="color-swatch" data-team-color="A" data-color="#ffffff" style="--swatch-color: #ffffff" aria-label="チームA 白"></button>
+            </div>
+          </div>
           <label>
             チームB名称
             <input id="teamBNameInput" type="text" autocomplete="off">
           </label>
+          <div class="color-field">
+            <span class="field-label">チームBカラー</span>
+            <div class="color-presets" aria-label="チームBカラー">
+              <button type="button" class="color-swatch" data-team-color="B" data-color="#145fa8" style="--swatch-color: #145fa8" aria-label="チームB 青"></button>
+              <button type="button" class="color-swatch" data-team-color="B" data-color="#9c3b1c" style="--swatch-color: #9c3b1c" aria-label="チームB 赤"></button>
+              <button type="button" class="color-swatch" data-team-color="B" data-color="#176f5d" style="--swatch-color: #176f5d" aria-label="チームB 緑"></button>
+              <button type="button" class="color-swatch" data-team-color="B" data-color="#f1c84b" style="--swatch-color: #f1c84b" aria-label="チームB 黄"></button>
+              <button type="button" class="color-swatch" data-team-color="B" data-color="#6f4aa8" style="--swatch-color: #6f4aa8" aria-label="チームB 紫"></button>
+              <button type="button" class="color-swatch" data-team-color="B" data-color="#e986aa" style="--swatch-color: #e986aa" aria-label="チームB 桃"></button>
+              <button type="button" class="color-swatch" data-team-color="B" data-color="#1f2623" style="--swatch-color: #1f2623" aria-label="チームB 黒"></button>
+              <button type="button" class="color-swatch" data-team-color="B" data-color="#ffffff" style="--swatch-color: #ffffff" aria-label="チームB 白"></button>
+            </div>
+          </div>
         </div>
 
         <div class="button-row settings-actions">
@@ -109,21 +135,21 @@
 
             <div class="tag-actions tag-actions-grid">
               <button id="tagTopLeftButton" type="button" class="serve-button" data-position="topLeft" data-team="B" data-play="serve">
-                <span id="tagTopLeftTeamLabel">B</span>
                 <span>サーブ</span>
+                <span id="tagTopLeftTeamLabel">B</span>
               </button>
               <button id="tagTopRightButton" type="button" class="spike-button" data-position="topRight" data-team="B" data-play="attack">
-                <span id="tagTopRightTeamLabel">B</span>
                 <span>アタック</span>
+                <span id="tagTopRightTeamLabel">B</span>
               </button>
               <button id="courtChangeButton" type="button" class="court-change-button">コートチェンジ</button>
               <button id="tagBottomLeftButton" type="button" class="serve-button" data-position="bottomLeft" data-team="A" data-play="serve">
-                <span id="tagBottomLeftTeamLabel">A</span>
                 <span>サーブ</span>
+                <span id="tagBottomLeftTeamLabel">A</span>
               </button>
               <button id="tagBottomRightButton" type="button" class="spike-button" data-position="bottomRight" data-team="A" data-play="attack">
-                <span id="tagBottomRightTeamLabel">A</span>
                 <span>アタック</span>
+                <span id="tagBottomRightTeamLabel">A</span>
               </button>
             </div>
           </section>

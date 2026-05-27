@@ -5,14 +5,16 @@ const RANGE_MAX = 5;
 const DRIVE_SAVE_DELAY_MS = 2500;
 const DEFAULT_DRIVE_WEB_APP_URL = "";
 const DEFAULT_DRIVE_FOLDER_ID = "";
+const DEFAULT_TEAM_COLORS = { A: "#145fa8", B: "#9c3b1c" };
+const TEAM_COLOR_PRESETS = ["#145fa8", "#9c3b1c", "#176f5d", "#f1c84b", "#6f4aa8", "#1f2623", "#ffffff", "#e986aa"];
 
 const defaultProject = {
   projectId: "",
   projectName: "",
   youtubeVideoId: "",
   teams: {
-    A: { name: "" },
-    B: { name: "" }
+    A: { name: "", color: DEFAULT_TEAM_COLORS.A },
+    B: { name: "", color: DEFAULT_TEAM_COLORS.B }
   },
   tags: []
 };
@@ -46,6 +48,8 @@ const els = {
   youtubeInput: document.querySelector("#youtubeInput"),
   teamANameInput: document.querySelector("#teamANameInput"),
   teamBNameInput: document.querySelector("#teamBNameInput"),
+  teamAColorButtons: document.querySelectorAll('[data-team-color="A"]'),
+  teamBColorButtons: document.querySelectorAll('[data-team-color="B"]'),
   loadVideoButton: document.querySelector("#loadVideoButton"),
   exportProjectButton: document.querySelector("#exportProjectButton"),
   resetProjectButton: document.querySelector("#resetProjectButton"),
@@ -135,10 +139,12 @@ function normalizeProject(project) {
     youtubeVideoId: project.youtubeVideoId || "",
     teams: {
       A: {
-        name: normalizeTeamName(project.teams?.A?.name, "A")
+        name: normalizeTeamName(project.teams?.A?.name, "A"),
+        color: normalizeTeamColor(project.teams?.A?.color, "A")
       },
       B: {
-        name: normalizeTeamName(project.teams?.B?.name, "B")
+        name: normalizeTeamName(project.teams?.B?.name, "B"),
+        color: normalizeTeamColor(project.teams?.B?.color, "B")
       }
     },
     tags: (project.tags || [])
@@ -167,8 +173,8 @@ function normalizeLegacySceneProject(project) {
     projectName: normalizeProjectName(project.title || project.projectName),
     youtubeVideoId: project.youtubeVideoId || "",
     teams: {
-      A: { name: "" },
-      B: { name: "" }
+      A: { name: "", color: DEFAULT_TEAM_COLORS.A },
+      B: { name: "", color: DEFAULT_TEAM_COLORS.B }
     },
     tags: (project.scenes || [])
       .map((scene) => {
@@ -196,6 +202,12 @@ function normalizeTeamName(value, team) {
   const name = String(value || "").trim();
   if (!name || name === `Team ${team}` || name === `チーム${team}`) return "";
   return name;
+}
+
+function normalizeTeamColor(value, team) {
+  const color = String(value || "").trim().toLowerCase();
+  if (TEAM_COLOR_PRESETS.includes(color)) return color;
+  return DEFAULT_TEAM_COLORS[team];
 }
 
 function normalizePlay(value) {
@@ -291,6 +303,8 @@ function applySettingsFromInputs() {
   state.project.youtubeVideoId = videoId;
   state.project.teams.A.name = els.teamANameInput.value.trim();
   state.project.teams.B.name = els.teamBNameInput.value.trim();
+  state.project.teams.A.color = normalizeTeamColor(state.project.teams.A.color, "A");
+  state.project.teams.B.color = normalizeTeamColor(state.project.teams.B.color, "B");
   state.project.tags.forEach((tag) => {
     tag.youtubeVideoId = videoId;
     tag.label = makeLabel(tag.team, tag.play);
@@ -373,7 +387,7 @@ function markRecentlyAddedTag(tagId) {
     state.recentlyAddedTagId = "";
     state.recentlyAddedTimer = null;
     renderTagTable();
-  }, 3000);
+  }, 1000);
 }
 
 function sortedTags(tags = state.project.tags) {
@@ -432,6 +446,7 @@ function renderSettings() {
   els.teamANameInput.value = state.project.teams.A.name;
   els.teamBNameInput.value = state.project.teams.B.name;
   els.videoIdLabel.textContent = state.project.youtubeVideoId ? `動画ID: ${state.project.youtubeVideoId}` : "動画未読み込み";
+  renderTeamColorControls();
   renderTagButtonLabels();
   els.teamFilter.options[1].textContent = state.project.teams.A.name ? `A: ${state.project.teams.A.name}` : "A";
   els.teamFilter.options[2].textContent = state.project.teams.B.name ? `B: ${state.project.teams.B.name}` : "B";
@@ -452,6 +467,23 @@ function renderTagButtonLabels() {
     target.button.dataset.team = item.team;
     target.button.dataset.play = item.play;
     target.label.textContent = getTeamButtonLabel(item.team);
+    target.button.style.setProperty("--tag-team-color", state.project.teams[item.team].color);
+    target.button.style.setProperty("--tag-team-text", getReadableTextColor(state.project.teams[item.team].color));
+  });
+}
+
+function renderTeamColorControls() {
+  renderTeamColorControl("A", els.teamAColorButtons);
+  renderTeamColorControl("B", els.teamBColorButtons);
+}
+
+function renderTeamColorControl(team, buttons) {
+  const selectedColor = normalizeTeamColor(state.project.teams[team].color, team);
+  state.project.teams[team].color = selectedColor;
+  buttons.forEach((button) => {
+    const isSelected = button.dataset.color === selectedColor;
+    button.classList.toggle("selected", isSelected);
+    button.setAttribute("aria-pressed", String(isSelected));
   });
 }
 
@@ -476,6 +508,20 @@ function getCourtLayout() {
 function getTeamButtonLabel(team) {
   const name = state.project.teams[team]?.name || "";
   return name ? `${team}：${name}` : team;
+}
+
+function getReadableTextColor(hexColor) {
+  const hex = normalizeHexColor(hexColor);
+  const red = parseInt(hex.slice(1, 3), 16);
+  const green = parseInt(hex.slice(3, 5), 16);
+  const blue = parseInt(hex.slice(5, 7), 16);
+  const brightness = (red * 299 + green * 587 + blue * 114) / 1000;
+  return brightness > 155 ? "#17211d" : "#ffffff";
+}
+
+function normalizeHexColor(value) {
+  const color = String(value || "").trim().toLowerCase();
+  return /^#[0-9a-f]{6}$/.test(color) ? color : DEFAULT_TEAM_COLORS.A;
 }
 
 function renderDriveSettings() {
@@ -1047,6 +1093,14 @@ function bindEvents() {
 
   [els.teamANameInput, els.teamBNameInput].forEach((input) => {
     input.addEventListener("change", applySettingsFromInputs);
+  });
+  [...els.teamAColorButtons, ...els.teamBColorButtons].forEach((button) => {
+    button.addEventListener("click", () => {
+      const team = button.dataset.teamColor;
+      state.project.teams[team].color = normalizeTeamColor(button.dataset.color, team);
+      saveProject();
+      render();
+    });
   });
   [els.driveAutoSaveEnabled, els.driveWebAppUrlInput, els.driveFolderIdInput, els.driveSecretInput].forEach((input) => {
     input.addEventListener("change", () => readDriveSettingsFromInputs());
