@@ -493,11 +493,11 @@ function renderDriveStatus(message) {
     return;
   }
   if (!state.driveSync.enabled) {
-    statusMessage = "Drive自動保存はオフです";
+    statusMessage = "オフ";
   } else if (!hasDriveSyncSettings()) {
-    statusMessage = "Drive自動保存の設定が不足しています";
+    statusMessage = "未設定";
   } else {
-    statusMessage = "Drive自動保存は有効です";
+    statusMessage = "有効";
   }
   if (els.driveSummaryStatus) els.driveSummaryStatus.textContent = statusMessage;
 }
@@ -832,10 +832,10 @@ function scheduleDriveSave() {
     renderDriveStatus();
     return;
   }
-  renderDriveStatus("Drive自動保存待機中...");
+  renderDriveStatus("待機中");
   state.driveSync.timer = setTimeout(() => {
     saveProjectToDrive().catch(() => {
-      renderDriveStatus("Drive保存に失敗しました。ファイル書き出しでバックアップしてください。");
+      renderDriveStatus("失敗");
     });
   }, DRIVE_SAVE_DELAY_MS);
 }
@@ -847,14 +847,14 @@ async function saveProjectToDrive() {
     return;
   }
   if (!hasDriveSyncSettings()) {
-    renderDriveStatus("Drive自動保存の設定が不足しています");
+    renderDriveStatus("未設定");
     return;
   }
   if (state.driveSync.saving) return;
 
   ensureProjectId();
   state.driveSync.saving = true;
-  renderDriveStatus("Driveへ保存中...");
+  renderDriveStatus("保存中");
   const payload = {
     action: "saveProject",
     secret: state.driveSync.secret,
@@ -866,7 +866,7 @@ async function saveProjectToDrive() {
 
   try {
     await submitDrivePayload(payload);
-    renderDriveStatus(`Driveへ送信しました。フォルダを確認してください ${formatStatusTime(new Date())}`);
+    renderDriveStatus(`保存済 ${formatStatusTime(new Date())}`);
   } finally {
     state.driveSync.saving = false;
   }
@@ -1053,7 +1053,7 @@ function bindEvents() {
   });
   els.driveSaveNowButton.addEventListener("click", () => {
     saveProjectToDrive().catch(() => {
-      renderDriveStatus("Drive保存に失敗しました。設定を確認してください。");
+      renderDriveStatus("失敗");
     });
   });
 

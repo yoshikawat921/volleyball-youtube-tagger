@@ -267,11 +267,13 @@ td:nth-child(4) {
   cursor: pointer;
   display: flex;
   font-weight: 900;
-  gap: 0.75rem;
+  gap: 0.5rem;
   justify-content: space-between;
   list-style-position: inside;
+  min-width: 0;
   touch-action: manipulation;
   user-select: none;
+  white-space: nowrap;
 }
 
 .drive-sync-panel summary::-webkit-details-marker {
@@ -290,13 +292,14 @@ td:nth-child(4) {
 }
 
 .drive-summary-title {
-  flex: 1 1 auto;
-  min-width: 0;
+  flex: 0 0 auto;
+  min-width: max-content;
+  white-space: nowrap;
 }
 
 .drive-summary-status {
   color: var(--muted);
-  flex: 0 1 auto;
+  flex: 1 1 auto;
   font-size: 0.9rem;
   font-weight: 800;
   min-width: 0;
