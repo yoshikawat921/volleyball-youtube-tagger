@@ -5,8 +5,8 @@ const RANGE_MAX = 5;
 const DRIVE_SAVE_DELAY_MS = 2500;
 const DEFAULT_DRIVE_WEB_APP_URL = "";
 const DEFAULT_DRIVE_FOLDER_ID = "";
-const DEFAULT_TEAM_COLORS = { A: "#145fa8", B: "#9c3b1c" };
-const TEAM_COLOR_PRESETS = ["#145fa8", "#9c3b1c", "#176f5d", "#f1c84b", "#6f4aa8", "#1f2623", "#ffffff", "#e986aa"];
+const DEFAULT_TEAM_COLORS = { A: "#ffffff", B: "#ffffff" };
+const TEAM_COLOR_PRESETS = ["#ffffff", "#1f2623", "#145fa8", "#9c3b1c", "#176f5d", "#f1c84b", "#6f4aa8", "#e986aa", "#68c7df", "#f28c28"];
 
 const defaultProject = {
   projectId: "",

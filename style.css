@@ -1,19 +1,20 @@
 :root {
   color-scheme: light;
-  --bg: #f8f4ee;
+  --bg: #f2f7f0;
   --panel: #ffffff;
   --ink: #1f1f1f;
   --muted: #6f6f6f;
   --line: #dedede;
-  --accent: #6f5b46;
-  --accent-dark: #4d3f31;
-  --accent-soft: #eee6dc;
-  --sepia-soft: #eee6dc;
-  --sepia-dark: #6f5b46;
+  --accent: #d8eadb;
+  --accent-dark: #c7dfcb;
+  --accent-soft: #e7f2e8;
+  --sepia-soft: #e7f2e8;
+  --sepia-dark: #d8eadb;
+  --green-mid: #8fbd95;
   --serve: #4a4a4a;
   --spike: #4a4a4a;
-  --danger: #4d3f31;
-  --focus: 0 0 0 3px rgba(111, 91, 70, 0.22);
+  --danger: #c7dfcb;
+  --focus: 0 0 0 3px rgba(92, 129, 97, 0.22);
   --shadow: 0 16px 42px rgba(0, 0, 0, 0.1);
 }
 
@@ -229,7 +230,7 @@ td:nth-child(4) {
 }
 
 .eyebrow {
-  color: var(--accent);
+  color: var(--muted);
   font-size: 0.8rem;
   font-weight: 900;
   letter-spacing: 0;
@@ -272,7 +273,7 @@ td:nth-child(4) {
   align-items: center;
   display: grid;
   gap: 0.45rem;
-  grid-template-columns: repeat(8, minmax(0, 1fr));
+  grid-template-columns: repeat(10, minmax(0, 1fr));
   min-height: 46px;
 }
 
@@ -291,7 +292,7 @@ td:nth-child(4) {
 }
 
 .color-swatch.selected {
-  border-color: var(--sepia-dark);
+  border-color: var(--green-mid);
   box-shadow: var(--focus);
 }
 
@@ -303,7 +304,7 @@ td:nth-child(4) {
 
 .drive-sync-panel summary {
   align-items: center;
-  color: var(--sepia-dark);
+  color: var(--ink);
   cursor: pointer;
   display: flex;
   font-weight: 900;
@@ -485,7 +486,14 @@ td:nth-child(4) {
 }
 
 .play-pause-button {
+  background: var(--accent);
+  border: 2px solid var(--green-mid);
+  color: var(--ink);
   gap: 0.35rem;
+}
+
+.play-pause-button:hover {
+  background: var(--accent-dark);
 }
 
 .play-icon {
@@ -532,10 +540,11 @@ td:nth-child(4) {
 
 .danger-button {
   background: var(--danger);
+  color: var(--ink);
 }
 
 .danger-button:hover {
-  background: #2f2f2f;
+  background: var(--accent-dark);
 }
 
 .reset-button {
@@ -605,6 +614,7 @@ td:nth-child(4) {
 .tag-actions .serve-button,
 .tag-actions .spike-button {
   background: var(--tag-team-color);
+  border: 2px solid var(--green-mid);
   color: var(--tag-team-text);
 }
 
@@ -689,14 +699,16 @@ td:nth-child(4) {
 }
 
 .range-fill {
-  background: var(--sepia-dark);
+  background: var(--accent);
   right: auto;
 }
 
 .range-handle {
-  border: 2px solid #fff;
+  background: var(--accent);
+  border: 2px solid var(--green-mid);
   border-radius: 999px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  color: var(--ink);
   font-size: 0.78rem;
   height: 2.55rem;
   min-height: 0;
@@ -766,8 +778,8 @@ td:nth-child(4) {
 }
 
 .table-play-button {
-  background: var(--sepia-dark);
-  color: #fff;
+  background: var(--accent);
+  color: var(--ink);
 }
 
 .table-play-button:hover {
