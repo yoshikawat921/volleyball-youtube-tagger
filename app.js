@@ -33,6 +33,8 @@ const state = {
   tableSort: { key: "time", direction: "desc" },
   preRoll: 3,
   postRoll: 3,
+  playbackMode: "youtube",
+  localVideo: { url: "", name: "", ready: false },
   player: null,
   playerReady: false,
   recentlyAddedTagId: "",
@@ -51,7 +53,9 @@ const els = {
   teamAColorButtons: document.querySelectorAll('[data-team-color="A"]'),
   teamBColorButtons: document.querySelectorAll('[data-team-color="B"]'),
   loadVideoButton: document.querySelector("#loadVideoButton"),
+  localVideoInput: document.querySelector("#localVideoInput"),
   exportProjectButton: document.querySelector("#exportProjectButton"),
+  partialResetProjectButton: document.querySelector("#partialResetProjectButton"),
   resetProjectButton: document.querySelector("#resetProjectButton"),
   importProjectInput: document.querySelector("#importProjectInput"),
   driveAutoSaveEnabled: document.querySelector("#driveAutoSaveEnabled"),
@@ -59,6 +63,8 @@ const els = {
   driveFolderIdInput: document.querySelector("#driveFolderIdInput"),
   driveSecretInput: document.querySelector("#driveSecretInput"),
   driveSummaryStatus: document.querySelector("#driveSummaryStatus"),
+  playerFrame: document.querySelector("#playerFrame"),
+  localVideo: document.querySelector("#localVideo"),
   videoIdLabel: document.querySelector("#videoIdLabel"),
   currentTimeLabel: document.querySelector("#currentTimeLabel"),
   saveStatus: document.querySelector("#saveStatus"),
@@ -72,12 +78,10 @@ const els = {
   tagBottomRightTeamLabel: document.querySelector("#tagBottomRightTeamLabel"),
   courtChangeButton: document.querySelector("#courtChangeButton"),
   playPauseButton: document.querySelector("#playPauseButton"),
-  seekBack1Button: document.querySelector("#seekBack1Button"),
-  seekForward1Button: document.querySelector("#seekForward1Button"),
-  seekBack5Button: document.querySelector("#seekBack5Button"),
-  seekForward5Button: document.querySelector("#seekForward5Button"),
-  seekBack30Button: document.querySelector("#seekBack30Button"),
-  seekForward30Button: document.querySelector("#seekForward30Button"),
+  seekBack3Button: document.querySelector("#seekBack3Button"),
+  seekForward3Button: document.querySelector("#seekForward3Button"),
+  seekBack10Button: document.querySelector("#seekBack10Button"),
+  seekForward10Button: document.querySelector("#seekForward10Button"),
   playFilter: document.querySelector("#playFilter"),
   teamFilter: document.querySelector("#teamFilter"),
   replayRangeSlider: document.querySelector("#replayRangeSlider"),
@@ -276,23 +280,89 @@ function extractYouTubeId(input) {
 }
 
 function getCurrentTime() {
+  if (isLocalPlayback()) return Number(els.localVideo?.currentTime) || 0;
   if (!state.playerReady || !state.player?.getCurrentTime) return 0;
   return state.player.getCurrentTime();
 }
 
-function seekBy(deltaSeconds) {
+function isLocalPlayback() {
+  return state.playbackMode === "local";
+}
+
+function isPlaybackReady() {
+  if (isLocalPlayback()) return Boolean(els.localVideo?.src && els.localVideo.readyState >= 1);
+  return state.playerReady;
+}
+
+function seekTo(time) {
+  const nextTime = Math.max(0, Number(time) || 0);
+  if (isLocalPlayback()) {
+    if (!isPlaybackReady()) return;
+    const duration = Number.isFinite(els.localVideo.duration) ? els.localVideo.duration : nextTime;
+    els.localVideo.currentTime = Math.min(nextTime, duration);
+    return;
+  }
   if (!state.playerReady) return;
-  const nextTime = Math.max(0, getCurrentTime() + deltaSeconds);
   state.player.seekTo(nextTime, true);
 }
 
+function playCurrentVideo() {
+  if (isLocalPlayback()) {
+    if (!isPlaybackReady()) return;
+    const playPromise = els.localVideo.play();
+    if (playPromise?.catch) {
+      playPromise.catch(() => {
+        setStatus("元動画ファイルを再生できませんでした");
+      });
+    }
+    return;
+  }
+  if (state.playerReady) state.player.playVideo();
+}
+
+function pauseCurrentVideo() {
+  if (isLocalPlayback()) {
+    els.localVideo.pause();
+    return;
+  }
+  if (state.playerReady) state.player.pauseVideo();
+}
+
+function stopCurrentVideo() {
+  pauseCurrentVideo();
+  seekTo(0);
+}
+
+function clearLocalVideoSource() {
+  if (state.localVideo.url) {
+    URL.revokeObjectURL(state.localVideo.url);
+  }
+  state.localVideo = { url: "", name: "", ready: false };
+  els.localVideo.removeAttribute("src");
+  els.localVideo.load();
+}
+
+function seekBy(deltaSeconds) {
+  if (!isPlaybackReady()) return;
+  const nextTime = Math.max(0, getCurrentTime() + deltaSeconds);
+  seekTo(nextTime);
+}
+
 function togglePlayPause() {
-  if (!state.playerReady) return;
+  if (!isPlaybackReady()) return;
+  if (isLocalPlayback()) {
+    if (els.localVideo.paused) {
+      playCurrentVideo();
+    } else {
+      pauseCurrentVideo();
+    }
+    return;
+  }
   const playerState = state.player.getPlayerState();
   if (playerState === YT.PlayerState.PLAYING) {
-    state.player.pauseVideo();
+    pauseCurrentVideo();
   } else {
-    state.player.playVideo();
+    playCurrentVideo();
   }
 }
 
@@ -324,6 +394,8 @@ function loadVideo() {
     setStatus("有効なYouTube URLまたは11文字の動画IDを入力してください。");
     return;
   }
+  if (isLocalPlayback()) pauseCurrentVideo();
+  state.playbackMode = "youtube";
   state.project.youtubeVideoId = videoId;
   if (state.project.projectName === "動画タイトル取得中") {
     state.project.projectName = "";
@@ -339,6 +411,23 @@ function loadVideo() {
   render();
 }
 
+function loadLocalVideoFile(file) {
+  if (!file) return;
+  stopReplay("再生停止中");
+  clearLocalVideoSource();
+  state.playbackMode = "local";
+  state.localVideo = {
+    url: URL.createObjectURL(file),
+    name: file.name || "元動画ファイル",
+    ready: false
+  };
+  els.localVideo.removeAttribute("src");
+  els.localVideo.src = state.localVideo.url;
+  els.localVideo.load();
+  renderVideoInfo();
+  setStatus(`${state.localVideo.name} を読み込み中`);
+}
+
 function scheduleVideoTitleSync() {
   setTimeout(updateVideoTitleFromPlayer, 300);
   setTimeout(updateVideoTitleFromPlayer, 1200);
@@ -346,6 +435,7 @@ function scheduleVideoTitleSync() {
 }
 
 function updateVideoTitleFromPlayer() {
+  if (isLocalPlayback()) return;
   if (!state.playerReady || !state.player?.getVideoData) return;
   const title = state.player.getVideoData()?.title?.trim();
   if (!title || title === state.project.projectName) return;
@@ -453,12 +543,24 @@ function renderSettings() {
   els.youtubeInput.value = state.project.youtubeVideoId;
   els.teamANameInput.value = state.project.teams.A.name;
   els.teamBNameInput.value = state.project.teams.B.name;
-  els.videoIdLabel.textContent = state.project.youtubeVideoId ? `動画ID: ${state.project.youtubeVideoId}` : "動画未読み込み";
+  renderVideoInfo();
   renderTeamColorControls();
   renderTagButtonLabels();
   els.teamFilter.options[1].textContent = state.project.teams.A.name ? `A: ${state.project.teams.A.name}` : "A";
   els.teamFilter.options[2].textContent = state.project.teams.B.name ? `B: ${state.project.teams.B.name}` : "B";
   renderDriveSettings();
+}
+
+function renderVideoInfo() {
+  const isLocal = isLocalPlayback();
+  els.playerFrame.classList.toggle("local-video-mode", isLocal);
+  els.playerFrame.classList.toggle("youtube-mode", !isLocal);
+  if (isLocal) {
+    const readyText = state.localVideo.ready ? "" : "（読み込み中）";
+    els.videoIdLabel.textContent = state.localVideo.name ? `ファイル名: ${state.localVideo.name}${readyText}` : "未読込";
+    return;
+  }
+  els.videoIdLabel.textContent = state.project.youtubeVideoId ? `リンクID: ${state.project.youtubeVideoId}` : "未読込";
 }
 
 function renderTagButtonLabels() {
@@ -753,22 +855,23 @@ function render() {
 }
 
 function cueCurrentVideo() {
-  if (state.playerReady && state.project.youtubeVideoId) {
+  if (!isLocalPlayback() && state.playerReady && state.project.youtubeVideoId) {
     state.player.cueVideoById(state.project.youtubeVideoId);
   }
 }
 
 function playClip(tag, continueSequence = false) {
-  if (!state.playerReady) return;
-  if (tag.youtubeVideoId && tag.youtubeVideoId !== state.project.youtubeVideoId) {
+  if (!isPlaybackReady()) return;
+  if (!isLocalPlayback() && tag.youtubeVideoId && tag.youtubeVideoId !== state.project.youtubeVideoId) {
     state.project.youtubeVideoId = tag.youtubeVideoId;
     state.player.cueVideoById(tag.youtubeVideoId);
   }
   const start = Math.max(0, tag.time - state.preRoll);
   const end = tag.time + state.postRoll;
-  state.replay.clipEnd = end;
-  state.player.seekTo(start, true);
-  state.player.playVideo();
+  const duration = isLocalPlayback() && Number.isFinite(els.localVideo.duration) ? els.localVideo.duration : end;
+  state.replay.clipEnd = Math.min(end, duration);
+  seekTo(start);
+  playCurrentVideo();
   if (!continueSequence) {
     state.replay.active = false;
     clearReplayTimer();
@@ -804,7 +907,7 @@ function playReplayIndex(index) {
 }
 
 function checkReplayProgress() {
-  if (!state.replay.active || !state.playerReady) return;
+  if (!state.replay.active || !isPlaybackReady()) return;
   if (getCurrentTime() < state.replay.clipEnd) return;
 
   state.replay.index += 1;
@@ -829,9 +932,14 @@ function moveReplayBy(direction) {
 function stopReplay(message = "再生停止中") {
   state.replay.active = false;
   clearReplayTimer();
-  if (state.playerReady) state.player.pauseVideo();
+  pauseCurrentVideo();
   focusTagRow("", false);
   setReplayStatus(message);
+}
+
+function stopReplayAndReset() {
+  stopReplay();
+  seekTo(0);
 }
 
 function clearReplayTimer() {
@@ -882,8 +990,7 @@ function hasDriveSyncSettings() {
 
 function scheduleDriveSave() {
   if (state.driveSync.timer) {
-    clearTimeout(state.driveSync.timer);
-    state.driveSync.timer = null;
+    clearDriveSaveTimer();
   }
   if (!state.driveSync.enabled) return;
   if (!hasDriveSyncSettings()) {
@@ -896,6 +1003,11 @@ function scheduleDriveSave() {
       renderDriveStatus("失敗");
     });
   }, DRIVE_SAVE_DELAY_MS);
+}
+
+function clearDriveSaveTimer() {
+  clearTimeout(state.driveSync.timer);
+  state.driveSync.timer = null;
 }
 
 async function saveProjectToDrive() {
@@ -984,20 +1096,46 @@ async function resetProject() {
   const confirmed = await confirmProjectReset();
   if (!confirmed) return;
 
-  stopReplay("再生停止中");
+  clearSessionState();
   localStorage.removeItem(STORAGE_KEY);
   state.project = JSON.parse(JSON.stringify(defaultProject));
   ensureProjectId();
-  state.filters = { play: "", team: "" };
   state.driveSync.enabled = false;
   state.driveSync.webAppUrl = els.driveWebAppUrlInput.value.trim();
   state.driveSync.folderId = els.driveFolderIdInput.value.trim();
   state.driveSync.secret = els.driveSecretInput.value;
-  if (state.driveSync.timer) {
-    clearTimeout(state.driveSync.timer);
-    state.driveSync.timer = null;
-  }
+  clearDriveSaveTimer();
   saveDriveSettings();
+  render();
+  setStatus("完全初期化しました");
+}
+
+async function partialResetProject() {
+  const confirmed = confirm("チーム名称とチームカラーを残して、動画情報とタグを部分初期化します。タグファイル書出していないタグは失われます。部分初期化しますか？");
+  if (!confirmed) return;
+
+  const preservedTeams = cloneProject(state.project.teams);
+  clearSessionState();
+  clearDriveSaveTimer();
+  state.project = {
+    ...JSON.parse(JSON.stringify(defaultProject)),
+    teams: preservedTeams
+  };
+  ensureProjectId();
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state.project));
+  render();
+  setStatus("部分初期化しました");
+}
+
+function clearSessionState() {
+  stopReplay("再生停止中");
+  stopCurrentVideo();
+  clearLocalVideoSource();
+  state.playbackMode = "youtube";
+  state.filters = { play: "", team: "" };
+  state.replay = { active: false, tags: [], index: 0, clipEnd: 0, timer: null };
+  state.courtChanged = false;
+  state.activeReplayTagId = "";
   state.recentlyAddedTagId = "";
   if (state.recentlyAddedTimer) {
     clearTimeout(state.recentlyAddedTimer);
@@ -1005,16 +1143,12 @@ async function resetProject() {
   }
   els.playFilter.value = "";
   els.teamFilter.value = "";
-  if (state.playerReady) {
-    state.player.stopVideo();
-  }
-  render();
-  setStatus("初期化しました");
+  els.youtubeInput.value = "";
 }
 
 function confirmProjectReset() {
   if (!els.resetConfirmDialog || typeof els.resetConfirmDialog.showModal !== "function") {
-    return Promise.resolve(confirm("現在の入力内容とローカル保存データを初期化します。ファイル書き出ししていないタグは失われます。初期化しますか？"));
+    return Promise.resolve(confirm("現在の入力内容とローカル保存データを完全初期化します。タグファイル書出していないタグは失われます。完全初期化しますか？"));
   }
 
   return new Promise((resolve) => {
@@ -1106,7 +1240,22 @@ async function importProject(file) {
 function bindEvents() {
   els.loadVideoButton.addEventListener("click", loadVideo);
   els.exportProjectButton.addEventListener("click", exportProject);
+  els.partialResetProjectButton.addEventListener("click", partialResetProject);
   els.resetProjectButton.addEventListener("click", resetProject);
+  els.localVideoInput.addEventListener("change", (event) => {
+    loadLocalVideoFile(event.target.files[0]);
+    event.target.value = "";
+  });
+  els.localVideo.addEventListener("loadedmetadata", () => {
+    state.localVideo.ready = true;
+    renderVideoInfo();
+    setStatus(`${state.localVideo.name} を読み込みました`);
+  });
+  els.localVideo.addEventListener("error", () => {
+    state.localVideo.ready = false;
+    renderVideoInfo();
+    setStatus("元動画ファイルを読み込めませんでした");
+  });
   els.importProjectInput.addEventListener("change", (event) => {
     importProject(event.target.files[0]).catch(() => alert("このファイルを読み込めませんでした。"));
     event.target.value = "";
@@ -1149,12 +1298,10 @@ function bindEvents() {
   });
 
   els.playPauseButton.addEventListener("click", togglePlayPause);
-  els.seekBack1Button.addEventListener("click", () => seekBy(-1));
-  els.seekForward1Button.addEventListener("click", () => seekBy(1));
-  els.seekBack5Button.addEventListener("click", () => seekBy(-5));
-  els.seekForward5Button.addEventListener("click", () => seekBy(5));
-  els.seekBack30Button.addEventListener("click", () => seekBy(-30));
-  els.seekForward30Button.addEventListener("click", () => seekBy(30));
+  els.seekBack3Button.addEventListener("click", () => seekBy(-3));
+  els.seekForward3Button.addEventListener("click", () => seekBy(3));
+  els.seekBack10Button.addEventListener("click", () => seekBy(-10));
+  els.seekForward10Button.addEventListener("click", () => seekBy(10));
 
   els.playFilter.addEventListener("change", (event) => {
     state.filters.play = event.target.value;
@@ -1167,7 +1314,7 @@ function bindEvents() {
   els.playFilteredButton.addEventListener("click", playFilteredClips);
   els.previousReplayButton.addEventListener("click", () => moveReplayBy(-1));
   els.nextReplayButton.addEventListener("click", () => moveReplayBy(1));
-  els.stopReplayButton.addEventListener("click", () => stopReplay());
+  els.stopReplayButton.addEventListener("click", stopReplayAndReset);
   document.addEventListener("keydown", handleKeyboardShortcuts);
 }
 
@@ -1182,11 +1329,11 @@ function handleKeyboardShortcuts(event) {
   }
   if (event.key === "ArrowLeft") {
     event.preventDefault();
-    seekBy(event.shiftKey ? -5 : -1);
+    seekBy(event.shiftKey ? -10 : -3);
   }
   if (event.key === "ArrowRight") {
     event.preventDefault();
-    seekBy(event.shiftKey ? 5 : 1);
+    seekBy(event.shiftKey ? 10 : 3);
   }
 }
 

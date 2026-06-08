@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Volleyball Quick Tagger</title>
-    <link rel="stylesheet" href="style.css?v=20260527-16">
+    <link rel="stylesheet" href="style.css?v=20260608-3">
   </head>
   <body>
     <header class="app-header">
@@ -69,13 +69,18 @@
         </div>
 
         <div class="button-row settings-actions">
-          <button id="loadVideoButton" type="button">動画読み込み</button>
+          <button id="loadVideoButton" type="button">動画リンク読込</button>
           <label class="file-button">
-            ファイル読み込み
+            動画ファイル読込
+            <input id="localVideoInput" type="file" accept="video/mp4,video/*">
+          </label>
+          <label class="file-button">
+            タグファイル読込
             <input id="importProjectInput" type="file" accept="application/json,.json">
           </label>
-          <button id="exportProjectButton" type="button" class="export-button">ファイル書き出し</button>
-          <button id="resetProjectButton" type="button" class="reset-button">初期化</button>
+          <button id="exportProjectButton" type="button" class="export-button">タグファイル書出</button>
+          <button id="partialResetProjectButton" type="button" class="reset-button">部分初期化</button>
+          <button id="resetProjectButton" type="button" class="reset-button">完全初期化</button>
         </div>
 
         <details class="drive-sync-panel">
@@ -109,22 +114,21 @@
           <section class="panel player-panel" aria-labelledby="playerTitle">
             <div class="section-heading">
               <h2 id="playerTitle">動画</h2>
-              <p><span id="videoIdLabel">動画未読み込み</span></p>
+              <p id="videoStatusLabel"><span id="videoIdLabel">未読込</span></p>
             </div>
-            <div class="player-frame" aria-label="YouTube動画プレイヤー">
+            <div id="playerFrame" class="player-frame youtube-mode" aria-label="動画プレイヤー">
+              <video id="localVideo" class="local-video" playsinline preload="metadata"></video>
               <div id="player"></div>
             </div>
             <div class="playback-controls" aria-label="再生操作">
-              <button id="seekBack30Button" type="button" class="skip-button">-30s</button>
-              <button id="seekBack5Button" type="button" class="skip-button">-5s</button>
-              <button id="seekBack1Button" type="button" class="skip-button">-1s</button>
+              <button id="seekBack10Button" type="button" class="skip-button">-10s</button>
+              <button id="seekBack3Button" type="button" class="skip-button">-3s</button>
               <button id="playPauseButton" type="button" class="play-pause-button" aria-label="再生 / 一時停止">
                 <span class="play-icon" aria-hidden="true"></span>
                 <span class="pause-icon" aria-hidden="true"></span>
               </button>
-              <button id="seekForward1Button" type="button" class="skip-button">+1s</button>
-              <button id="seekForward5Button" type="button" class="skip-button">+5s</button>
-              <button id="seekForward30Button" type="button" class="skip-button">+30s</button>
+              <button id="seekForward3Button" type="button" class="skip-button">+3s</button>
+              <button id="seekForward10Button" type="button" class="skip-button">+10s</button>
             </div>
           </section>
 
@@ -224,16 +228,16 @@
 
     <dialog id="resetConfirmDialog" class="confirm-dialog" aria-labelledby="resetConfirmTitle">
       <form method="dialog">
-        <h2 id="resetConfirmTitle">初期化しますか？</h2>
-        <p>現在の入力内容とローカル保存データを初期化します。ファイル書き出ししていないタグは失われます。</p>
+        <h2 id="resetConfirmTitle">完全初期化しますか？</h2>
+        <p>現在の入力内容とローカル保存データを完全初期化します。タグファイル書出していないタグは失われます。</p>
         <div class="dialog-actions">
           <button id="resetCancelButton" type="submit" value="cancel" class="secondary-button" autofocus>キャンセル</button>
-          <button type="submit" value="reset" class="reset-button">初期化する</button>
+          <button type="submit" value="reset" class="reset-button">完全初期化する</button>
         </div>
       </form>
     </dialog>
 
     <script src="https://www.youtube.com/iframe_api"></script>
-    <script src="app.js?v=20260527-5"></script>
+    <script src="app.js?v=20260608-3"></script>
   </body>
 </html>
