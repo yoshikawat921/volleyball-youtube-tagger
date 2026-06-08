@@ -394,7 +394,10 @@ function loadVideo() {
     setStatus("有効なYouTube URLまたは11文字の動画IDを入力してください。");
     return;
   }
-  if (isLocalPlayback()) pauseCurrentVideo();
+  if (isLocalPlayback()) {
+    pauseCurrentVideo();
+    clearLocalVideoSource();
+  }
   state.playbackMode = "youtube";
   state.project.youtubeVideoId = videoId;
   if (state.project.projectName === "動画タイトル取得中") {
@@ -414,6 +417,7 @@ function loadVideo() {
 function loadLocalVideoFile(file) {
   if (!file) return;
   stopReplay("再生停止中");
+  if (state.playerReady) state.player.pauseVideo();
   clearLocalVideoSource();
   state.playbackMode = "local";
   state.localVideo = {
@@ -553,8 +557,14 @@ function renderSettings() {
 
 function renderVideoInfo() {
   const isLocal = isLocalPlayback();
+  const youtubeSurface = document.querySelector("#player");
   els.playerFrame.classList.toggle("local-video-mode", isLocal);
   els.playerFrame.classList.toggle("youtube-mode", !isLocal);
+  els.localVideo.hidden = !isLocal;
+  if (youtubeSurface) {
+    youtubeSurface.classList.add("player-surface", "youtube-player");
+    youtubeSurface.hidden = isLocal;
+  }
   if (isLocal) {
     const readyText = state.localVideo.ready ? "" : "（読み込み中）";
     els.videoIdLabel.textContent = state.localVideo.name ? `ファイル名: ${state.localVideo.name}${readyText}` : "未読込";

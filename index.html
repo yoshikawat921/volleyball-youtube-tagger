@@ -117,8 +117,8 @@
               <p id="videoStatusLabel"><span id="videoIdLabel">未読込</span></p>
             </div>
             <div id="playerFrame" class="player-frame youtube-mode" aria-label="動画プレイヤー">
-              <video id="localVideo" class="local-video" playsinline preload="metadata"></video>
-              <div id="player"></div>
+              <video id="localVideo" class="player-surface local-video" playsinline preload="metadata" hidden></video>
+              <div id="player" class="player-surface youtube-player"></div>
             </div>
             <div class="playback-controls" aria-label="再生操作">
               <button id="seekBack10Button" type="button" class="skip-button">-10s</button>

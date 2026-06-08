@@ -462,9 +462,8 @@ td:nth-child(4) {
   width: 100%;
 }
 
-.player-frame > div,
-.player-frame iframe,
-.local-video {
+.player-surface,
+.player-frame iframe {
   display: block;
   height: 100%;
   inset: 0;
@@ -477,9 +476,31 @@ td:nth-child(4) {
   object-fit: contain;
 }
 
+.youtube-player,
+.local-video {
+  visibility: visible;
+}
+
 .player-frame.youtube-mode .local-video,
-.player-frame.local-video-mode > div {
-  display: none;
+.player-frame.local-video-mode .youtube-player,
+.player-frame.local-video-mode iframe,
+.player-surface[hidden] {
+  display: none !important;
+  opacity: 0;
+  pointer-events: none;
+  visibility: hidden;
+}
+
+.player-frame.local-video-mode .local-video {
+  display: block;
+  opacity: 1;
+  pointer-events: auto;
+  visibility: visible;
+  z-index: 2;
+}
+
+.player-frame.youtube-mode .youtube-player {
+  z-index: 2;
 }
 
 .playback-controls {
