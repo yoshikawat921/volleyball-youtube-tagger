@@ -119,6 +119,7 @@
             <div id="playerFrame" class="player-frame youtube-mode" aria-label="動画プレイヤー">
               <video id="localVideo" class="player-surface local-video" playsinline preload="metadata" hidden></video>
               <div id="player" class="player-surface youtube-player"></div>
+              <button id="fullscreenButton" type="button" class="fullscreen-button" aria-label="全画面表示" hidden>全画面</button>
             </div>
             <div class="playback-controls" aria-label="再生操作">
               <button id="seekBack10Button" type="button" class="skip-button">-10s</button>
@@ -183,7 +184,7 @@
 
           <section class="panel replay-panel" aria-labelledby="replayTitle">
             <div class="section-heading">
-              <h2 id="replayTitle">絞り込み再生</h2>
+              <h2 id="replayTitle">絞り込み連続再生</h2>
               <p id="replaySummaryLabel">該当タグ 0 件</p>
             </div>
 
@@ -216,10 +217,11 @@
             </div>
 
             <div class="button-row replay-controls">
-              <button id="playFilteredButton" type="button">連続再生</button>
-              <button id="previousReplayButton" type="button" class="secondary-button">前のプレー</button>
-              <button id="nextReplayButton" type="button" class="secondary-button">次のプレー</button>
-              <button id="stopReplayButton" type="button" class="secondary-button">再生終了</button>
+              <button id="playFilteredButton" type="button">今すぐ再生</button>
+              <button id="delayedReplayButton" type="button">10秒後再生</button>
+              <button id="previousReplayButton" type="button" class="secondary-button">前へ</button>
+              <button id="nextReplayButton" type="button" class="secondary-button">次へ</button>
+              <button id="stopReplayButton" type="button" class="secondary-button">終了</button>
             </div>
           </section>
         </div>

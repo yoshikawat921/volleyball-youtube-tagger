@@ -31,8 +31,8 @@ const state = {
   },
   filters: { play: "", team: "" },
   tableSort: { key: "time", direction: "desc" },
-  preRoll: 3,
-  postRoll: 3,
+  preRoll: 4,
+  postRoll: 1,
   playbackMode: "youtube",
   localVideo: { url: "", name: "", ready: false },
   player: null,
@@ -40,8 +40,8 @@ const state = {
   recentlyAddedTagId: "",
   recentlyAddedTimer: null,
   activeReplayTagId: "",
-  replayStatusText: "再生停止中",
-  replay: { active: false, tags: [], index: 0, clipEnd: 0, timer: null },
+  replayStatusText: "停止中",
+  replay: { active: false, tags: [], index: 0, clipEnd: 0, timer: null, delayTimer: null },
   courtChanged: false
 };
 
@@ -65,6 +65,7 @@ const els = {
   driveSummaryStatus: document.querySelector("#driveSummaryStatus"),
   playerFrame: document.querySelector("#playerFrame"),
   localVideo: document.querySelector("#localVideo"),
+  fullscreenButton: document.querySelector("#fullscreenButton"),
   videoIdLabel: document.querySelector("#videoIdLabel"),
   currentTimeLabel: document.querySelector("#currentTimeLabel"),
   saveStatus: document.querySelector("#saveStatus"),
@@ -90,6 +91,7 @@ const els = {
   afterHandle: document.querySelector("#afterHandle"),
   replaySummaryLabel: document.querySelector("#replaySummaryLabel"),
   playFilteredButton: document.querySelector("#playFilteredButton"),
+  delayedReplayButton: document.querySelector("#delayedReplayButton"),
   previousReplayButton: document.querySelector("#previousReplayButton"),
   nextReplayButton: document.querySelector("#nextReplayButton"),
   stopReplayButton: document.querySelector("#stopReplayButton"),
@@ -366,6 +368,30 @@ function togglePlayPause() {
   }
 }
 
+function isPlayerFullscreen() {
+  return document.fullscreenElement === els.playerFrame;
+}
+
+function renderFullscreenButton() {
+  els.fullscreenButton.textContent = "全画面";
+  els.fullscreenButton.setAttribute("aria-label", "全画面表示");
+  els.fullscreenButton.hidden = !isLocalPlayback() || isPlayerFullscreen();
+}
+
+function toggleFullscreen() {
+  if (!document.fullscreenEnabled || !els.playerFrame.requestFullscreen) {
+    setStatus("全画面不可");
+    return;
+  }
+  if (isPlayerFullscreen()) {
+    return;
+  }
+  const request = els.playerFrame.requestFullscreen();
+  if (request?.catch) {
+    request.catch(() => setStatus("全画面不可"));
+  }
+}
+
 function applySettingsFromInputs() {
   const videoId = extractYouTubeId(els.youtubeInput.value) || state.project.youtubeVideoId;
   const videoChanged = videoId && videoId !== state.project.youtubeVideoId;
@@ -416,7 +442,7 @@ function loadVideo() {
 
 function loadLocalVideoFile(file) {
   if (!file) return;
-  stopReplay("再生停止中");
+  stopReplay("停止中");
   if (state.playerReady) state.player.pauseVideo();
   clearLocalVideoSource();
   state.playbackMode = "local";
@@ -565,12 +591,13 @@ function renderVideoInfo() {
     youtubeSurface.classList.add("player-surface", "youtube-player");
     youtubeSurface.hidden = isLocal;
   }
+  renderFullscreenButton();
   if (isLocal) {
     const readyText = state.localVideo.ready ? "" : "（読み込み中）";
-    els.videoIdLabel.textContent = state.localVideo.name ? `ファイル名: ${state.localVideo.name}${readyText}` : "未読込";
+    els.videoIdLabel.textContent = state.localVideo.name ? `${state.localVideo.name}${readyText}` : "未読込";
     return;
   }
-  els.videoIdLabel.textContent = state.project.youtubeVideoId ? `リンクID: ${state.project.youtubeVideoId}` : "未読込";
+  els.videoIdLabel.textContent = state.project.youtubeVideoId || "未読込";
 }
 
 function renderTagButtonLabels() {
@@ -750,8 +777,8 @@ function renderFilters() {
 
 function renderReplaySummary() {
   const count = filteredTags().length;
-  const status = state.replayStatusText ? `（${state.replayStatusText}） ` : "";
-  els.replaySummaryLabel.textContent = `${status}該当タグ ${count} 件`;
+  const status = state.replayStatusText || "停止中";
+  els.replaySummaryLabel.textContent = `${status} / 該当 ${count} 件`;
 }
 
 function renderTagTable() {
@@ -889,6 +916,7 @@ function playClip(tag, continueSequence = false) {
 }
 
 function playFilteredClips() {
+  clearDelayedReplayTimer();
   const tags = filteredTags();
   if (!tags.length) {
     setReplayStatus("再生できる絞り込みタグがありません。");
@@ -896,6 +924,20 @@ function playFilteredClips() {
   }
   state.replay.tags = tags;
   playReplayIndex(0);
+}
+
+function playFilteredClipsAfterDelay() {
+  clearDelayedReplayTimer();
+  const tags = filteredTags();
+  if (!tags.length) {
+    setReplayStatus("再生できる絞り込みタグがありません。");
+    return;
+  }
+  setReplayStatus("10秒後再生");
+  state.replay.delayTimer = setTimeout(() => {
+    state.replay.delayTimer = null;
+    playFilteredClips();
+  }, 10000);
 }
 
 function playReplayIndex(index) {
@@ -909,7 +951,7 @@ function playReplayIndex(index) {
   state.replay.tags = tags;
   state.replay.index = safeIndex;
   const tag = tags[safeIndex];
-  setReplayStatus(`再生中 ${safeIndex + 1} / ${tags.length}`);
+  setReplayStatus(`${safeIndex + 1} 件目`);
   focusTagRow(tag.id);
   playClip(tag, true);
   clearReplayTimer();
@@ -939,8 +981,9 @@ function moveReplayBy(direction) {
   playReplayIndex(state.replay.index + direction);
 }
 
-function stopReplay(message = "再生停止中") {
+function stopReplay(message = "停止中") {
   state.replay.active = false;
+  clearDelayedReplayTimer();
   clearReplayTimer();
   pauseCurrentVideo();
   focusTagRow("", false);
@@ -956,6 +999,13 @@ function clearReplayTimer() {
   if (state.replay.timer) {
     clearInterval(state.replay.timer);
     state.replay.timer = null;
+  }
+}
+
+function clearDelayedReplayTimer() {
+  if (state.replay.delayTimer) {
+    clearTimeout(state.replay.delayTimer);
+    state.replay.delayTimer = null;
   }
 }
 
@@ -1138,7 +1188,7 @@ async function partialResetProject() {
 }
 
 function clearSessionState() {
-  stopReplay("再生停止中");
+  stopReplay("停止中");
   stopCurrentVideo();
   clearLocalVideoSource();
   state.playbackMode = "youtube";
@@ -1239,7 +1289,7 @@ async function importProject(file) {
   const text = await file.text();
   state.project = normalizeProject(JSON.parse(text));
   state.filters = { play: "", team: "" };
-  stopReplay("再生停止中");
+    stopReplay("停止中");
   cueCurrentVideo();
   scheduleVideoTitleSync();
   saveProject();
@@ -1312,6 +1362,8 @@ function bindEvents() {
   els.seekForward3Button.addEventListener("click", () => seekBy(3));
   els.seekBack10Button.addEventListener("click", () => seekBy(-10));
   els.seekForward10Button.addEventListener("click", () => seekBy(10));
+  els.fullscreenButton.addEventListener("click", toggleFullscreen);
+  document.addEventListener("fullscreenchange", renderFullscreenButton);
 
   els.playFilter.addEventListener("change", (event) => {
     state.filters.play = event.target.value;
@@ -1322,6 +1374,7 @@ function bindEvents() {
     renderFilters();
   });
   els.playFilteredButton.addEventListener("click", playFilteredClips);
+  els.delayedReplayButton.addEventListener("click", playFilteredClipsAfterDelay);
   els.previousReplayButton.addEventListener("click", () => moveReplayBy(-1));
   els.nextReplayButton.addEventListener("click", () => moveReplayBy(1));
   els.stopReplayButton.addEventListener("click", stopReplayAndReset);

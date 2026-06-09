@@ -503,6 +503,52 @@ td:nth-child(4) {
   z-index: 2;
 }
 
+.fullscreen-button {
+  background: rgba(226, 239, 225, 0.92);
+  border: 1px solid rgba(31, 38, 35, 0.22);
+  border-radius: 6px;
+  color: var(--ink);
+  font-size: 0.78rem;
+  font-weight: 700;
+  min-height: 34px;
+  padding: 0.35rem 0.6rem;
+  position: absolute;
+  right: 0.55rem;
+  top: 0.55rem;
+  z-index: 4;
+}
+
+.fullscreen-button:hover,
+.fullscreen-button:focus-visible {
+  background: var(--accent-soft);
+}
+
+.fullscreen-button[hidden],
+.player-frame:fullscreen .fullscreen-button {
+  display: none !important;
+}
+
+.player-frame:fullscreen {
+  align-items: center;
+  aspect-ratio: auto;
+  background: #000000;
+  border-radius: 0;
+  display: flex;
+  height: 100vh;
+  justify-content: center;
+  width: 100vw;
+}
+
+.player-frame:fullscreen .player-surface,
+.player-frame:fullscreen iframe {
+  height: 100%;
+  width: 100%;
+}
+
+.player-frame:fullscreen .local-video {
+  object-fit: contain;
+}
+
 .playback-controls {
   display: grid;
   gap: 0.4rem;
@@ -570,6 +616,7 @@ td:nth-child(4) {
 .table-delete-button,
 #loadVideoButton,
 #playFilteredButton,
+#delayedReplayButton,
 .file-button,
 .export-button {
   background: var(--sepia-soft);
@@ -580,6 +627,7 @@ td:nth-child(4) {
 .table-delete-button:hover,
 #loadVideoButton:hover,
 #playFilteredButton:hover,
+#delayedReplayButton:hover,
 .file-button:hover,
 .export-button:hover {
   background: var(--accent-dark);
@@ -589,6 +637,7 @@ td:nth-child(4) {
 .table-delete-button:active,
 #loadVideoButton:active,
 #playFilteredButton:active,
+#delayedReplayButton:active,
 .file-button:active,
 .export-button:active {
   background: var(--accent-dark);
@@ -731,7 +780,15 @@ td:nth-child(4) {
 
 .replay-controls {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: 1.25fr 1.25fr 0.8fr 0.8fr 0.8fr;
+}
+
+#playFilteredButton,
+#delayedReplayButton,
+#previousReplayButton,
+#nextReplayButton,
+#stopReplayButton {
+  min-width: 0;
 }
 
 .replay-panel .button-row button {
@@ -1044,6 +1101,22 @@ td:nth-child(4) {
     min-width: 7.6rem;
     padding-inline: 0.55rem;
     width: min(9.5rem, 68%);
+  }
+
+  .replay-controls {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+
+  #playFilteredButton,
+  #delayedReplayButton {
+    grid-column: span 3;
+  }
+
+  #previousReplayButton,
+  #nextReplayButton,
+  #stopReplayButton {
+    grid-column: span 2;
   }
 
   .playback-controls {
